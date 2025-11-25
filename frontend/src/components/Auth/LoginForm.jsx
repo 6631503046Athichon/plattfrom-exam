@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { FaLock, FaExclamationTriangle } from 'react-icons/fa';
+import { FaLock, FaExclamationTriangle, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const LoginForm = ({ onSubmit, error }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -44,14 +45,30 @@ const LoginForm = ({ onSubmit, error }) => {
         <label className="block text-gray-900 font-semibold mb-2 text-sm">
           Password <span className="text-red-500">*</span>
         </label>
-        <input
-          type="password"
-          value={formData.password}
-          onChange={(e) => setFormData({...formData, password: e.target.value})}
-          required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-          placeholder="Enter your password"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={formData.password}
+            onChange={(e) => setFormData({...formData, password: e.target.value})}
+            required
+            autoComplete="current-password"
+            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            placeholder="Enter your password"
+            style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors z-10 flex items-center justify-center"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? (
+              <FaEyeSlash className="text-xl flex-shrink-0" />
+            ) : (
+              <FaEye className="text-xl flex-shrink-0" />
+            )}
+          </button>
+        </div>
       </div>
 
       <button

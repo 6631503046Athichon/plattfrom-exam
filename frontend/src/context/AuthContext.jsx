@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 
-export const AuthContext = createContext();
+export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -9,14 +9,15 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
+      const isAuthenticated = localStorage.getItem('isAuthenticated');
+      if (isAuthenticated === 'true') {
         try {
           const userData = await authService.getCurrentUser();
           setUser(userData);
         } catch (error) {
           console.error('Failed to load user:', error);
-          localStorage.removeItem('token');
+          localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('currentUser');
         }
       }
       setLoading(false);
@@ -41,8 +42,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const value = {
+    user,
+    loading,
+    login,
+    register,
+    logout
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

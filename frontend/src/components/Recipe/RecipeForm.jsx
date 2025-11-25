@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaLightbulb } from 'react-icons/fa';
 
 const RecipeForm = ({ onSubmit, initialData = {}, buttonText = 'Create Recipe' }) => {
@@ -8,6 +8,17 @@ const RecipeForm = ({ onSubmit, initialData = {}, buttonText = 'Create Recipe' }
     instructions: initialData.instructions || '',
     image_url: initialData.image_url || '',
   });
+
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setFormData({
+        title: initialData.title || '',
+        ingredients: initialData.ingredients || '',
+        instructions: initialData.instructions || '',
+        image_url: initialData.image_url || '',
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

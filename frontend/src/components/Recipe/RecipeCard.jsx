@@ -42,7 +42,7 @@ const RecipeCard = ({ recipe }) => {
             to={`/recipe/${recipe.id}`}
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 hover:shadow-md transition-all duration-200 text-sm font-medium"
           >
-            View →
+            View
           </Link>
         </div>
       </div>
