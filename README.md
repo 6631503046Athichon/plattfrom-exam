@@ -1,7 +1,7 @@
 # Recipe Sharing Platform with Ratings
 
-**Student:** นายอธิชลแก้วหล้า  
-**Student ID:** 66315030406  
+**Student:** นายอธิชล แก้วหล้า  
+**Student ID:** 6631503046
 **Course:** 1305308 Platform Development  
 **Project:** Recipe Sharing Platform with Ratings
 
