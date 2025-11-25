@@ -15,3 +15,41 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Hide browser's default password reveal button */
+/* Chrome, Safari, Edge */
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  right: -9999px !important;
+}
+
+/* Edge, IE */
+input[type="password"]::-ms-reveal {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+input[type="password"]::-ms-clear {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Firefox */
+input[type="password"] {
+  -moz-appearance: textfield;
+}
+
+/* Additional fix for modern browsers */
+input[type="password"] {
+  text-security: disc;
+  -webkit-text-security: disc;
+  -moz-text-security: disc;
+}

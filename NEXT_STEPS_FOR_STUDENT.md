@@ -1,6 +1,8 @@
 # 📝 ขั้นตอนต่อไปสำหรับนักศึกษา
 
-**สถานะปัจจุบัน:** โค้ดเสร็จสมบูรณ์ทั้ง Backend และ Frontend แล้ว ✅
+**สถานะปัจจุบัน:** โค้ด Frontend เสร็จสมบูรณ์แล้ว (Option B) ✅
+
+> **หมายเหตุ:** Frontend ใช้ **Mock Data** ไม่ต้องใช้ Backend เลย! ทำงานด้วย localStorage ทั้งหมด
 
 ---
 
@@ -16,19 +18,14 @@
 
 ### เปิดแอพ:
 
-**Terminal 1 (Backend):**
-```bash
-cd backend
-npm start
-```
-ต้องเห็น: `Server running on port 5000 🚀`
-
-**Terminal 2 (Frontend):**
+**เปิด Terminal เดียวเท่านั้น:**
 ```bash
 cd frontend
 npm run dev
 ```
-ต้องเห็น: `Local: http://localhost:5174/`
+ต้องเห็น: `Local: http://localhost:5173/` หรือ `5174`
+
+> **ไม่ต้องรัน Backend!** เพราะใช้ Mock Data ทั้งหมดแล้ว
 
 ### เปิดเบราว์เซอร์และถ่ายรูป:
 
@@ -49,13 +46,15 @@ npm run dev
 - บันทึกเป็น: `screenshots/03-login.png`
 
 **ภาพที่ 4: Create Recipe**
-- ล็อกอินก่อน (ใช้ user ที่เคยสร้างจาก test)
+- ล็อกอินก่อนด้วย Mock User:
+  - Email: `chef.john@example.com`
+  - Password: (ใส่อะไรก็ได้ เช่น `123456`)
 - คลิก "Create Recipe"
 - กรอกข้อมูล:
-  - Title: "Pad Thai"
-  - Ingredients: "Rice noodles\nShrimp\nEggs\nFish sauce"
-  - Instructions: "1. Soak noodles\n2. Cook shrimp..."
-  - Image URL: `https://images.unsplash.com/photo-1559314809-0d155014e29e`
+  - Title: "Spicy Thai Basil Chicken"
+  - Ingredients: "Chicken breast\nThai basil\nChili peppers\nFish sauce"
+  - Instructions: "1. Stir fry chicken\n2. Add basil and chili..."
+  - Image URL: `https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd`
 - บันทึกเป็น: `screenshots/04-create-recipe.png`
 
 **ภาพที่ 5: Recipe Detail**
@@ -136,17 +135,14 @@ npm run dev
 ### B. หรือใช้มือ
 
 1. ลบโฟลเดอร์:
-   - `backend/node_modules/`
-   - `frontend/node_modules/`
-   - `backend/database.db`
-   - `backend/.env`
+   - `frontend/node_modules/` (ถ้ามี)
+   - `backend/` (ไม่ต้องส่ง เพราะไม่ได้ใช้)
 
-2. เลือกโฟลเดอร์:
-   - `backend/`
-   - `frontend/`
-   - `docs/`
+2. เลือกโฟลเดอร์/ไฟล์:
+   - `frontend/` (ทั้งหมด)
+   - `docs/` (เอกสารทั้ง 5 Task)
    - `README.md`
-   - `SUBMISSION_GUIDE.md`
+   - `screenshots/` (รูป 7 รูป)
 
 3. คลิกขวา > Send to > Compressed (zipped) folder
 4. ตั้งชื่อ: `66315030406_Recipe_Platform.zip`
@@ -156,15 +152,12 @@ npm run dev
 ```bash
 # แตกไฟล์ไปโฟลเดอร์ใหม่
 # ลองติดตั้งและรัน:
-cd backend
-npm install
-npm start
-
-cd ../frontend
+cd frontend
 npm install
 npm run dev
 
-# ต้องทำงานได้ปกติ
+# ต้องทำงานได้ปกติ (ไม่ต้องรัน backend)
+# เปิดเบราว์เซอร์ต้องเห็น recipes ทั้งหมด
 ```
 
 ---

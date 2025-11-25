@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaCarrot, FaClipboardList, FaComments, FaUserChef, FaEdit, FaTrash, FaQuestionCircle, FaSadTear } from 'react-icons/fa';
+import { FaCarrot, FaClipboardList, FaComments, FaUser, FaEdit, FaTrash, FaQuestionCircle, FaSadTear } from 'react-icons/fa';
 import { recipeService } from '../services/recipeService';
 import { ratingService } from '../services/ratingService';
 import { useAuth } from '../hooks/useAuth';
@@ -217,7 +217,7 @@ const RecipeDetailPage = () => {
             {isOwner && (
               <div className="bg-gray-50 border border-gray-200 p-6 rounded-xl mb-8 text-center">
                 <p className="text-gray-700 font-medium flex items-center justify-center gap-2">
-                  <FaUserChef className="text-xl" />
+                  <FaUser className="text-xl" />
                   You cannot rate your own recipe
                 </p>
               </div>
