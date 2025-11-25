@@ -1,9 +1,18 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaUtensils } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleHomeClick = (e) => {
+    if (location.pathname === '/') {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('resetHomeSearch'));
+    }
+  };
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
@@ -16,6 +25,7 @@ const Navbar = () => {
         <div className="flex gap-6 items-center">
           <Link
             to="/"
+            onClick={handleHomeClick}
             className="text-gray-700 hover:text-indigo-600 transition-colors font-medium relative group"
           >
             Home

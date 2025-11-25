@@ -16,8 +16,6 @@ code {
     monospace;
 }
 
-/* Hide browser's default password reveal button */
-/* Chrome, Safari, Edge */
 input[type="password"]::-webkit-credentials-auto-fill-button {
   display: none !important;
   visibility: hidden !important;
@@ -27,7 +25,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   right: -9999px !important;
 }
 
-/* Edge, IE */
 input[type="password"]::-ms-reveal {
   display: none !important;
   visibility: hidden !important;
@@ -42,12 +39,10 @@ input[type="password"]::-ms-clear {
   height: 0 !important;
 }
 
-/* Firefox */
 input[type="password"] {
   -moz-appearance: textfield;
 }
 
-/* Additional fix for modern browsers */
 input[type="password"] {
   text-security: disc;
   -webkit-text-security: disc;

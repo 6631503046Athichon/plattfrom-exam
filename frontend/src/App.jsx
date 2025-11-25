@@ -5,11 +5,11 @@ import Navbar from './components/Layout/Navbar';
 import HomePage from './pages/HomePage';
 import RecipeDetailPage from './pages/RecipeDetailPage';
 import CreateRecipePage from './pages/CreateRecipePage';
+import EditRecipePage from './pages/EditRecipePage';
 import MyRecipesPage from './pages/MyRecipesPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
-// Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -36,6 +36,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <CreateRecipePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-recipe/:id"
+          element={
+            <ProtectedRoute>
+              <EditRecipePage />
             </ProtectedRoute>
           }
         />

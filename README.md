@@ -51,22 +51,26 @@ A community-driven recipe sharing web platform with authentication, CRUD operati
 ### Frontend
 - **React.js 18+** - UI library
 - **React Router 6** - Client-side routing
-- **Axios** - HTTP client
 - **Tailwind CSS** - Utility-first CSS framework
 - **Vite** - Build tool
+- **React Icons** - Icon library
 
-### Backend
-- **Node.js 18+ LTS** - JavaScript runtime
-- **Express.js 4** - Web framework
-- **SQLite3** - Database
-- **JWT** - Authentication
-- **bcryptjs** - Password hashing
-- **express-validator** - Input validation
+### Data Storage
+- **localStorage** - Browser storage API (mock data)
+- **JSON** - Data serialization
+
+### State Management
+- **React Context API** - Global state (authentication)
+- **React Hooks** - Component state management
 
 ### Development Tools
-- **Postman** - API testing
 - **Git** - Version control
 - **ESLint/Prettier** - Code quality
+
+### หมายเหตุ
+- นี่เป็น **mock implementation** สำหรับ development
+- ข้อมูลถูกจัดเก็บใน browser localStorage
+- สำหรับ production ต้องใช้ **backend API + database จริง**
 
 ---
 
@@ -74,35 +78,21 @@ A community-driven recipe sharing web platform with authentication, CRUD operati
 
 ```
 recipe-platform/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── database.js
-│   │   ├── middleware/
-│   │   │   ├── auth.js
-│   │   │   ├── errorHandler.js
-│   │   │   └── validator.js
-│   │   ├── controllers/
-│   │   │   ├── authController.js
-│   │   │   ├── recipeController.js
-│   │   │   └── ratingController.js
-│   │   ├── routes/
-│   │   │   ├── auth.routes.js
-│   │   │   ├── recipe.routes.js
-│   │   │   └── rating.routes.js
-│   │   └── server.js
-│   ├── database.sqlite
-│   ├── package.json
-│   ├── .env
-│   └── README.md
-│
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Layout/
+│   │   │   │   └── Navbar.jsx
 │   │   │   ├── Recipe/
+│   │   │   │   ├── RecipeCard.jsx
+│   │   │   │   ├── RecipeForm.jsx
+│   │   │   │   └── RecipeList.jsx
 │   │   │   ├── Rating/
+│   │   │   │   ├── RatingStars.jsx
+│   │   │   │   └── RatingForm.jsx
 │   │   │   └── Auth/
+│   │   │       ├── LoginForm.jsx
+│   │   │       └── RegisterForm.jsx
 │   │   ├── pages/
 │   │   │   ├── HomePage.jsx
 │   │   │   ├── RecipeDetailPage.jsx
@@ -111,7 +101,6 @@ recipe-platform/
 │   │   │   ├── LoginPage.jsx
 │   │   │   └── RegisterPage.jsx
 │   │   ├── services/
-│   │   │   ├── api.js
 │   │   │   ├── authService.js
 │   │   │   ├── recipeService.js
 │   │   │   └── ratingService.js
@@ -119,17 +108,21 @@ recipe-platform/
 │   │   │   └── AuthContext.jsx
 │   │   ├── hooks/
 │   │   │   └── useAuth.js
+│   │   ├── data/
+│   │   │   └── mockData.js
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   ├── package.json
-│   └── vite.config.js
+│   ├── vite.config.js
+│   └── tailwind.config.js
 │
 ├── docs/
 │   ├── TASK1_System_Requirements.md
 │   ├── TASK2_Security_PDPA_Compliance.md
 │   ├── TASK3_AI_Assisted_Design.md
 │   ├── TASK4_Architecture_Design.md
-│   └── Final_Exam_Documentation.pdf
+│   ├── TASK5_Implementation.md
+│   └── FINAL_PROJECT_SUMMARY.md
 │
 └── README.md
 ```
@@ -142,27 +135,6 @@ recipe-platform/
 - Node.js 18+ LTS
 - npm or yarn
 - Git
-
-### Backend Setup
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Install dependencies
-npm install
-
-# Create .env file (already provided)
-# .env content:
-# PORT=5000
-# JWT_SECRET=your_jwt_secret_key_change_this_in_production_2024
-# NODE_ENV=development
-
-# Start the server
-npm start
-
-# Server will run on http://localhost:5000
-```
 
 ### Frontend Setup
 
@@ -184,147 +156,153 @@ npm run dev
 
 ---
 
-## API Endpoints
+## Service Methods
 
-### Authentication
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/auth/register` | Public | Register new user |
-| POST | `/api/auth/login` | Public | Login user |
-| GET | `/api/auth/me` | Private | Get current user |
+### Authentication Service (authService)
+| Method | Parameters | Access | Description |
+|--------|-----------|--------|-------------|
+| `register(userData)` | `{name, email, password}` | Public | Register new user |
+| `login(credentials)` | `{email, password}` | Public | Login user |
+| `getCurrentUser()` | - | Private | Get current user |
+| `logout()` | - | Private | Logout user |
 
-### Recipes
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/recipes` | Public | Get all recipes (with search) |
-| GET | `/api/recipes/:id` | Public | Get recipe by ID |
-| POST | `/api/recipes` | Private | Create new recipe |
-| PUT | `/api/recipes/:id` | Private | Update recipe (owner only) |
-| DELETE | `/api/recipes/:id` | Private | Delete recipe (owner only) |
-| GET | `/api/recipes/user/my-recipes` | Private | Get user's recipes |
+### Recipe Service (recipeService)
+| Method | Parameters | Access | Description |
+|--------|-----------|--------|-------------|
+| `getAllRecipes(search)` | `search: string` | Public | Get all recipes (with search) |
+| `getRecipeById(id)` | `id: number` | Public | Get recipe by ID |
+| `createRecipe(recipeData)` | `{title, ingredients, instructions, image_url}` | Private | Create new recipe |
+| `updateRecipe(id, recipeData)` | `id: number, recipeData: object` | Private | Update recipe (owner only) |
+| `deleteRecipe(id)` | `id: number` | Private | Delete recipe (owner only) |
+| `getMyRecipes()` | - | Private | Get user's recipes |
 
-### Ratings
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/recipes/:recipeId/ratings` | Public | Get all ratings for recipe |
-| POST | `/api/recipes/:recipeId/ratings` | Private | Add rating to recipe |
-| PUT | `/api/ratings/:id` | Private | Update rating |
-| DELETE | `/api/ratings/:id` | Private | Delete rating |
+### Rating Service (ratingService)
+| Method | Parameters | Access | Description |
+|--------|-----------|--------|-------------|
+| `getRatings(recipeId)` | `recipeId: number` | Public | Get all ratings for recipe |
+| `addRating(recipeId, ratingData)` | `recipeId: number, {rating, comment}` | Private | Add rating to recipe |
+| `updateRating(id, ratingData)` | `id: number, ratingData: object` | Private | Update rating |
+| `deleteRating(id)` | `id: number` | Private | Delete rating |
 
 ---
 
-## Database Schema
+## Data Structure (localStorage)
 
-### Users Table
-```sql
-CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  role TEXT DEFAULT 'user',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+### Users Data Structure
+```javascript
+// localStorage key: 'users'
+[
+  {
+    id: 1,
+    name: "John Doe",
+    email: "john@example.com",
+    role: "user",
+    created_at: "2024-01-01T00:00:00.000Z"
+  }
+]
 ```
 
-### Recipes Table
-```sql
-CREATE TABLE recipes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  title TEXT NOT NULL,
-  ingredients TEXT NOT NULL,
-  instructions TEXT NOT NULL,
-  image_url TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+### Recipes Data Structure
+```javascript
+// localStorage key: 'recipes'
+[
+  {
+    id: 1,
+    user_id: 1,
+    user_name: "John Doe",
+    title: "Pad Thai",
+    ingredients: "Rice noodles, shrimp, eggs...",
+    instructions: "1. Soak noodles...",
+    image_url: "https://example.com/padthai.jpg",
+    average_rating: 4.5,
+    rating_count: 10,
+    created_at: "2024-01-01T00:00:00.000Z",
+    updated_at: "2024-01-01T00:00:00.000Z"
+  }
+]
 ```
 
-### Ratings Table
-```sql
-CREATE TABLE ratings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  recipe_id INTEGER NOT NULL,
-  user_id INTEGER NOT NULL,
-  rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
-  comment TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE(recipe_id, user_id)
-);
+### Ratings Data Structure
+```javascript
+// localStorage key: 'ratings'
+[
+  {
+    id: 1,
+    recipe_id: 1,
+    user_id: 2,
+    user_name: "Jane Doe",
+    rating: 5,
+    comment: "Great recipe!",
+    created_at: "2024-01-01T00:00:00.000Z"
+  }
+]
 ```
 
 ---
 
 ## Testing
 
-### API Testing with Postman
+### Manual Testing
 
-1. Import the Postman collection: `backend/Postman_Collection.json`
-2. Register a new user via `/api/auth/register`
-3. Login to get JWT token
-4. Set token in Authorization header: `Bearer <your_token>`
-5. Test all CRUD operations
+1. เปิดแอปพลิเคชันใน browser: `http://localhost:5173`
+2. ทดสอบการลงทะเบียนผู้ใช้ใหม่
+3. ทดสอบการเข้าสู่ระบบ
+4. ทดสอบการสร้างสูตรอาหาร
+5. ทดสอบการแก้ไข/ลบสูตรอาหาร
+6. ทดสอบการให้คะแนนสูตรอาหาร
+7. ทดสอบการค้นหาสูตรอาหาร
 
-### Example Requests
+### Example Usage
 
-**Register:**
-```bash
-POST http://localhost:5000/api/auth/register
-Content-Type: application/json
-
-{
-  "name": "Test User",
-  "email": "test@example.com",
-  "password": "password123"
-}
-```
+**Register User:**
+- ไปที่หน้า Register
+- กรอกชื่อ, อีเมล, รหัสผ่าน
+- คลิก Register
+- ข้อมูลจะถูกบันทึกลง localStorage
 
 **Create Recipe:**
-```bash
-POST http://localhost:5000/api/recipes
-Authorization: Bearer <your_token>
-Content-Type: application/json
+- เข้าสู่ระบบก่อน
+- ไปที่หน้า Create Recipe
+- กรอกข้อมูลสูตรอาหาร
+- คลิก Create
+- สูตรจะถูกบันทึกลง localStorage
 
-{
-  "title": "Pad Thai",
-  "ingredients": "Rice noodles, shrimp, eggs, fish sauce...",
-  "instructions": "1. Soak noodles... 2. Heat oil...",
-  "image_url": "https://example.com/padthai.jpg"
-}
-```
+**Reset Data:**
+- เปิด browser console (F12)
+- รันคำสั่ง: `localStorage.clear()`
+- รีเฟรชหน้าเพื่อกู้คืน mock data เริ่มต้น
 
 ---
 
 ## Security Features
 
-✅ **Password Security**
-- bcrypt hashing with 10 salt rounds
-- No plain-text passwords stored
+✅ **Authentication (Mock Mode)**
+- Mock token system (localStorage-based)
+- Protected Routes (React Router)
+- AuthContext for global auth state
+- ไม่เก็บรหัสผ่าน (mock authentication)
 
-✅ **Authentication**
-- JWT tokens with 7-day expiration
-- Bearer token authorization
-
-✅ **Input Validation**
-- express-validator on all endpoints
-- Type checking and sanitization
-
-✅ **SQL Injection Protection**
-- Parameterized queries only
-- No string concatenation in SQL
+✅ **Input Validation & Sanitization**
+- Client-side validation on all forms
+- Input sanitization (ป้องกัน XSS)
+- Type checking and length validation
+- React's built-in XSS protection
 
 ✅ **Access Control**
-- User ownership verification
-- Role-based access (user/admin)
+- User ownership verification (client-side)
+- Protected Routes สำหรับหน้าที่ต้อง authentication
+- Ownership checks before update/delete
+
+✅ **Data Security**
+- localStorage management
+- Data structure validation
+- Error handling
+- หมายเหตุ: นี่เป็น mock implementation - สำหรับ production ต้องใช้ backend API + database จริง
 
 ✅ **PDPA Compliance**
 - Clear data collection purpose
 - No third-party data sharing
-- User can delete account (data erasure)
+- Data stored in browser localStorage (client-side)
 
 ---
 
@@ -355,8 +333,8 @@ All exam tasks are documented in the `docs/` folder:
    - 2 UX/UI Wireframes (Home Page, Recipe Detail)
 
 5. **Task 5:** Coding Implementation
-   - Full CRUD API for recipes
-   - Authentication system
+   - Full CRUD operations (mock data via localStorage)
+   - Mock authentication system
    - Rating system
    - All source code in this repository
 
@@ -379,25 +357,30 @@ As per exam requirements, the following will be submitted:
    - Create, edit, delete own recipes
    - Rate other users' recipes
    - Add comments to ratings
+   - View recipe details
 
-2. **Admin (future enhancement)**
-   - All user permissions
-   - Moderate content
-   - Delete any recipe
-   - Ban users
+2. **Admin**
+   - All regular user permissions
+   - Edit any recipe (for content moderation)
+   - Delete any recipe (for content moderation)
+   - Manage all content on the platform
+   - Login with: `admin@gmali.com` (any password in mock mode)
 
 ---
 
 ## Known Limitations & Future Enhancements
 
 **Current Limitations:**
-- SQLite (suitable for < 100K records)
+- localStorage (ประมาณ 5-10MB ต่อ domain)
 - No image upload (URL only)
 - No pagination (loads all recipes)
 - No email verification
+- Client-side only (ไม่ sync ระหว่าง devices)
+- Mock authentication (ไม่เก็บรหัสผ่านจริง)
+- ข้อมูลไม่ปลอดภัยสำหรับ production
 
 **Future Enhancements:**
-- Migrate to PostgreSQL for production
+- Migrate to backend API + database (PostgreSQL/SQLite)
 - Image upload to cloud storage (AWS S3, Cloudinary)
 - Pagination and infinite scroll
 - Recipe categories and tags
@@ -407,6 +390,7 @@ As per exam requirements, the following will be submitted:
 - Admin dashboard
 - Recipe printing functionality
 - Nutritional information
+- Real authentication (JWT + bcrypt)
 
 ---
 
@@ -414,12 +398,12 @@ As per exam requirements, the following will be submitted:
 
 **Actual Time Spent:** ~3 hours
 
-- Backend Setup & API: 1.5 hours
-- Database Design: 30 minutes
-- Authentication: 30 minutes
+- Frontend Setup & Components: 1.5 hours
+- Service Layer & Mock Data: 30 minutes
+- Authentication (Mock): 30 minutes
 - Documentation: 30 minutes
 
-**Frontend Time (For Student):** ~2.5 hours estimated
+**Note:** นี่เป็น mock implementation สำหรับ development - สำหรับ production ต้องใช้ backend API + database จริง
 
 ---
 
@@ -441,10 +425,12 @@ ISC - For educational purposes only (1305308 Platform Development Final Exam)
 
 - Course Instructor: 1305308 Platform Development
 - AI Assistant: Claude Code (Anthropic) for system design recommendations
-- Frameworks: React.js, Express.js teams
+- Frameworks: React.js team
 - Community: Stack Overflow, MDN Web Docs
 
 ---
 
-**Project Status:** ✅ Complete (Full-Stack Implementation - Backend + Frontend + Documentation)
+**Project Status:** ✅ Complete (Frontend Implementation with Mock Data + Documentation)
+**Implementation Type:** Mock implementation for development
+**Note:** For production, backend API + database is required
 **Last Updated:** November 25, 2025

@@ -5,16 +5,13 @@ import {
   getUserRecipes
 } from '../data/mockData';
 
-// Simulate async delay
 const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Get all recipes from localStorage or use default mock data
 const getStoredRecipes = () => {
   const stored = localStorage.getItem('recipes');
   return stored ? JSON.parse(stored) : [...mockRecipes];
 };
 
-// Save recipes to localStorage
 const saveRecipes = (recipes) => {
   localStorage.setItem('recipes', JSON.stringify(recipes));
 };
@@ -70,12 +67,25 @@ export const recipeService = {
   updateRecipe: async (id, recipeData) => {
     await delay();
     const recipes = getStoredRecipes();
-    const index = recipes.findIndex(r => r.id === parseInt(id));
+    const recipe = recipes.find(r => r.id === parseInt(id));
 
-    if (index === -1) {
+    if (!recipe) {
       throw new Error('Recipe not found');
     }
 
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+      throw new Error('Not authenticated');
+    }
+    
+    const isOwner = recipe.user_id === currentUser.id;
+    const isAdmin = currentUser.role === 'admin';
+    
+    if (!isOwner && !isAdmin) {
+      throw new Error('Not authorized to update this recipe');
+    }
+
+    const index = recipes.findIndex(r => r.id === parseInt(id));
     recipes[index] = {
       ...recipes[index],
       ...recipeData,
@@ -89,15 +99,27 @@ export const recipeService = {
   deleteRecipe: async (id) => {
     await delay();
     const recipes = getStoredRecipes();
-    const filteredRecipes = recipes.filter(r => r.id !== parseInt(id));
+    const recipe = recipes.find(r => r.id === parseInt(id));
 
-    if (recipes.length === filteredRecipes.length) {
+    if (!recipe) {
       throw new Error('Recipe not found');
     }
 
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+      throw new Error('Not authenticated');
+    }
+    
+    const isOwner = recipe.user_id === currentUser.id;
+    const isAdmin = currentUser.role === 'admin';
+    
+    if (!isOwner && !isAdmin) {
+      throw new Error('Not authorized to delete this recipe');
+    }
+
+    const filteredRecipes = recipes.filter(r => r.id !== parseInt(id));
     saveRecipes(filteredRecipes);
 
-    // Also delete associated ratings
     const ratings = JSON.parse(localStorage.getItem('ratings') || '[]');
     const filteredRatings = ratings.filter(r => r.recipe_id !== parseInt(id));
     localStorage.setItem('ratings', JSON.stringify(filteredRatings));

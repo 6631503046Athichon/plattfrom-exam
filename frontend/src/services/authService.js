@@ -1,15 +1,27 @@
 import { mockUsers } from '../data/mockData';
 
-// Simulate async delay
 const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Get all users from localStorage or use default mock data
 const getStoredUsers = () => {
   const stored = localStorage.getItem('users');
-  return stored ? JSON.parse(stored) : [...mockUsers];
+  let users = stored ? JSON.parse(stored) : [...mockUsers];
+  
+  const adminUser = mockUsers.find(u => u.role === 'admin');
+  if (adminUser) {
+    const existingAdminIndex = users.findIndex(u => u.role === 'admin');
+    
+    if (existingAdminIndex !== -1) {
+      users[existingAdminIndex] = { ...users[existingAdminIndex], ...adminUser };
+    } else {
+      users.push(adminUser);
+    }
+    
+    saveUsers(users);
+  }
+  
+  return users;
 };
 
-// Save users to localStorage
 const saveUsers = (users) => {
   localStorage.setItem('users', JSON.stringify(users));
 };
@@ -19,7 +31,6 @@ export const authService = {
     await delay();
     const users = getStoredUsers();
 
-    // Check if email already exists
     if (users.find(u => u.email === userData.email)) {
       throw new Error('Email already exists');
     }
@@ -35,7 +46,6 @@ export const authService = {
     users.push(newUser);
     saveUsers(users);
 
-    // Set as current user
     localStorage.setItem('currentUser', JSON.stringify(newUser));
     localStorage.setItem('isAuthenticated', 'true');
 
@@ -46,15 +56,12 @@ export const authService = {
     await delay();
     const users = getStoredUsers();
 
-    // Find user by email
     const user = users.find(u => u.email === credentials.email);
 
     if (!user) {
       throw new Error('Invalid email or password');
     }
 
-    // In mock mode, any password works for demo purposes
-    // Set as current user
     localStorage.setItem('currentUser', JSON.stringify(user));
     localStorage.setItem('isAuthenticated', 'true');
 

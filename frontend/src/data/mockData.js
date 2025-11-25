@@ -1,7 +1,3 @@
-// Mock Data for Recipe Sharing Platform
-// This data simulates backend responses for demonstration purposes
-
-// Mock Users
 export const mockUsers = [
   {
     id: 1,
@@ -23,10 +19,16 @@ export const mockUsers = [
     email: "mike.chef@example.com",
     role: "user",
     created_at: "2024-02-01T09:15:00.000Z"
+  },
+  {
+    id: 4,
+    name: "Admin User",
+    email: "admin@gmali.com",
+    role: "admin",
+    created_at: "2024-01-01T00:00:00.000Z"
   }
 ];
 
-// Mock Recipes
 export const mockRecipes = [
   {
     id: 1,
@@ -193,7 +195,6 @@ export const mockRecipes = [
   }
 ];
 
-// Mock Ratings
 export const mockRatings = [
   {
     id: 1,
@@ -287,7 +288,6 @@ export const mockRatings = [
   }
 ];
 
-// Current logged in user (for demo)
 export const currentUser = {
   id: 1,
   name: "Chef John",
@@ -295,7 +295,6 @@ export const currentUser = {
   role: "user"
 };
 
-// Helper function to get recipes with ratings
 export const getRecipesWithRatings = () => {
   return mockRecipes.map(recipe => {
     const recipeRatings = mockRatings.filter(r => r.recipe_id === recipe.id);
@@ -311,12 +310,10 @@ export const getRecipesWithRatings = () => {
   });
 };
 
-// Helper function to get ratings for a recipe
 export const getRatingsForRecipe = (recipeId) => {
   return mockRatings.filter(r => r.recipe_id === parseInt(recipeId));
 };
 
-// Helper function to get recipe by ID
 export const getRecipeById = (recipeId) => {
   const recipe = mockRecipes.find(r => r.id === parseInt(recipeId));
   if (!recipe) return null;
@@ -333,7 +330,6 @@ export const getRecipeById = (recipeId) => {
   };
 };
 
-// Helper function to search recipes
 export const searchRecipes = (query) => {
   if (!query) return getRecipesWithRatings();
 
@@ -344,7 +340,6 @@ export const searchRecipes = (query) => {
   );
 };
 
-// Helper function to get user's recipes
 export const getUserRecipes = (userId) => {
   return getRecipesWithRatings().filter(r => r.user_id === userId);
 };

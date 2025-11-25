@@ -64,10 +64,10 @@ Entities:
 
 ---
 
-### Prompt 3: การออกแบบ API Endpoint
+### Prompt 3: การออกแบบ Service Methods (สำหรับ Mock Data)
 
 ```
-ออกแบบ RESTful API endpoints สำหรับแพลตฟอร์มแชร์สูตรอาหารพร้อมการยืนยันตัวตน
+ออกแบบ service methods สำหรับแพลตฟอร์มแชร์สูตรอาหารพร้อมการยืนยันตัวตน (mock mode)
 
 ฟีเจอร์ที่ต้องการ:
 1. การยืนยันตัวตนผู้ใช้ (ลงทะเบียน เข้าสู่ระบบ)
@@ -77,20 +77,19 @@ Entities:
 5. รับสูตรของผู้ใช้เอง
 
 ข้อกำหนด:
-- ปฏิบัติตามแบบแผน REST
-- ระบุ HTTP methods (GET, POST, PUT, DELETE)
-- ระบุ endpoints ที่ต้องการการยืนยันตัวตน
-- รวมตัวอย่างรูปแบบ request และ response
-- พิจารณา pagination สำหรับ endpoints แบบรายการ
+- ใช้ localStorage สำหรับการจัดเก็บข้อมูล
+- ใช้ mock authentication (ไม่เก็บรหัสผ่านจริง)
+- รวมตัวอย่างรูปแบบ function calls และ return values
+- พิจารณา async simulation (delay) เพื่อเลียนแบบ API calls
 
 กรุณาให้:
-1. รายการ endpoints ที่สมบูรณ์พร้อม HTTP methods
-2. รูปแบบ URL
-3. ข้อกำหนดการยืนยันตัวตน
-4. ตัวอย่าง request body (JSON)
-5. ตัวอย่าง response (JSON)
+1. รายการ service methods ที่สมบูรณ์
+2. Function signatures และ parameters
+3. ข้อกำหนดการยืนยันตัวตน (mock tokens)
+4. ตัวอย่าง function calls
+5. ตัวอย่าง return values (JSON)
 
-เน้นที่ 3-5 endpoints ที่สำคัญที่สุดสำหรับ MVP
+เน้นที่ 3-5 methods ที่สำคัญที่สุดสำหรับ MVP
 ```
 
 ---
@@ -122,52 +121,41 @@ Entities:
 
 ---
 
-**Backend:**
-- **Node.js** (v18+ LTS) กับ Express.js (v4)
-  - **เหตุผล:** JavaScript ทั้ง frontend และ backend, non-blocking I/O, npm ecosystem มหาศาล
-  - **ประโยชน์:** พัฒนาเร็ว, น้ำหนักเบา, เหมาะสำหรับ REST APIs
-  - **ประสิทธิภาพ:** จัดการ requests พร้อมกันหลายพันรายการได้อย่างมีประสิทธิภาพ
+**Data Storage:**
+- **localStorage (Browser API)**
+  - **เหตุผล:** ไม่ต้องตั้งค่า backend, พัฒนาเร็ว, เหมาะสำหรับ MVP และการพัฒนา
+  - **ประโยชน์:** ไม่ต้องการ server แยก, ทำงานได้ทันทีใน browser, ข้อมูลยังคงอยู่แม้รีเฟรชหน้า
+  - **เหมาะสำหรับ:** ข้อมูลขนาดเล็กถึงกลาง (ประมาณ 5-10MB), development และ prototyping
+  - **ข้อจำกัด:** จำกัดขนาดข้อมูล, ไม่ปลอดภัยสำหรับข้อมูลที่ละเอียดอ่อน, client-side only
+  - **เส้นทางการย้าย:** ง่ายต่อการย้ายไป backend API + database เมื่อพร้อม
 
-- **Express.js**
-  - **เหตุผล:** Web framework แบบ minimalist, ไม่มีความเห็นตายตัว, ยืดหยุ่น
-  - **ประโยชน์:** ระบบ middleware, การกำหนดเส้นทางง่าย, plugin ecosystem มหาศาล
-  - **เส้นโค้งการเรียนรู้:** ง่าย ตรงไปตรงมา
-
----
-
-**Database:**
-- **SQLite3**
-  - **เหตุผล:** แบบไฟล์, ไม่ต้องตั้งค่า, เหมาะสำหรับ MVP และการพัฒนา
-  - **ประโยชน์:** ไม่ต้องการ database server แยก, พกพาได้, ปฏิบัติตาม ACID
-  - **เหมาะสำหรับ:** ข้อมูลมากถึง 100K+ records, traffic ขนาดเล็กถึงกลาง
-  - **เส้นทางการย้าย:** ง่ายต่อการย้ายไป PostgreSQL หากต้องการ
-
-- **ทางเลือกอื่น:** PostgreSQL สำหรับขนาด production (รองรับ 1M+ records, การเขียนพร้อมกัน)
+- **Mock Data Services**
+  - **เหตุผล:** จำลอง API calls สำหรับ development, ไม่ต้องรอ backend
+  - **ประโยชน์:** พัฒนา frontend ได้เต็มรูปแบบ, ทดสอบ UI/UX ได้ทันที
+  - **การใช้งาน:** Service layer ที่ใช้ localStorage แทน API calls
 
 ---
 
-**Authentication:**
-- **jsonwebtoken (JWT)**
-  - **เหตุผล:** การยืนยันตัวตนแบบ stateless, ทำงานได้ดีกับ REST APIs
-  - **ประโยชน์:** ไม่ต้องจัดเก็บ session ฝั่ง server, ขยายได้, มีการหมดอายุ
-
-- **bcryptjs**
-  - **เหตุผล:** การแฮชรหัสผ่านมาตรฐานอุตสาหกรรม
-  - **ประโยชน์:** การแฮชช้า (ป้องกัน brute force), มี salt อัตโนมัติ
+**Authentication (Mock Mode):**
+- **Mock Token System**
+  - **เหตุผล:** จำลองการยืนยันตัวตนสำหรับ development, ไม่ต้องตั้งค่า backend
+  - **ประโยชน์:** พัฒนาและทดสอบ authentication flow ได้ทันที
+  - **การใช้งาน:** ใช้ mock tokens ที่เก็บใน localStorage
+  - **หมายเหตุ:** สำหรับ production ต้องใช้ backend API + JWT จริง
 
 ---
 
 **Validation:**
-- **express-validator**
-  - **เหตุผล:** การตรวจสอบและทำความสะอาดข้อมูลป้อนเข้าฝั่ง server
-  - **ประโยชน์:** ป้องกันการโจมตีแบบ injection, ความสมบูรณ์ของข้อมูล, ข้อความข้อผิดพลาดชัดเจน
+- **Client-side Validation**
+  - **เหตุผล:** การตรวจสอบและทำความสะอาดข้อมูลป้อนเข้าฝั่ง client
+  - **ประโยชน์:** ป้องกัน XSS attacks, ความสมบูรณ์ของข้อมูล, UX ที่ดีขึ้น (instant feedback)
+  - **เครื่องมือ:** React form validation, custom validation functions
 
 ---
 
 **เครื่องมือเพิ่มเติม:**
-- **dotenv**: การจัดการตัวแปรสภาพแวดล้อม
-- **cors**: เปิดใช้งาน Cross-Origin Resource Sharing
-- **Postman**: การทดสอบ API
+- **Vite**: Build tool ที่รวดเร็วสำหรับ React
+- **React Icons**: ไอคอนสำเร็จรูป
 - **Git**: การควบคุมเวอร์ชัน
 - **ESLint + Prettier**: คุณภาพโค้ดและการจัดรูปแบบ
 
@@ -175,110 +163,109 @@ Entities:
 
 **เหตุใด Stack นี้จึงเหมาะกับโปรเจคของคุณ:**
 
-1. **ภาษาเดียว:** JavaScript/TypeScript ทุกที่ (เหมาะกับนักพัฒนา fullstack)
-2. **พัฒนา MVP เร็ว:** เครื่องมือทั้งหมดมีการติดตั้งและ boilerplate เร็ว
-3. **ความต้องการทรัพยากรต่ำ:** SQLite ไม่ต้องการ server แยก
+1. **Frontend-only:** พัฒนาได้เร็ว ไม่ต้องตั้งค่า backend
+2. **พัฒนา MVP เร็ว:** ไม่ต้องรอ backend, พัฒนา UI/UX ได้เต็มรูปแบบ
+3. **ความต้องการทรัพยากรต่ำ:** ไม่ต้องการ server หรือ database
 4. **ฟรีและโอเพนซอร์ส:** ไม่มีค่าใช้จ่ายสำหรับใบอนุญาต
 5. **เอกสารดีเยี่ยม:** เทคโนโลยีทั้งหมดมีบทเรียนและชุมชนที่ยอดเยี่ยม
-6. **เส้นทางการขยายขนาด:** อัปเกรดได้ง่าย (SQLite → PostgreSQL, เพิ่ม Redis cache, ฯลฯ)
-7. **มาตรฐานอุตสาหกรรม:** ทักษะที่สามารถถ่ายโอนได้และมีค่าในตลาดงาน
+6. **เส้นทางการขยายขนาด:** ง่ายต่อการย้ายไป backend API + database เมื่อพร้อม
+7. **มาตรฐานอุตสาหกรรม:** React เป็นเทคโนโลยีที่ใช้กันอย่างแพร่หลาย
+8. **หมายเหตุ:** นี่เป็น mock implementation สำหรับ development - สำหรับ production ต้องใช้ backend API + database จริง
 
 ---
 
-### B. Database Schema (3-5 ตารางหลัก)
+### B. Data Structure Design (สำหรับ localStorage)
 
-#### **คำตอบจาก AI:**
+#### **คำตอบจาก AI (ปรับให้เหมาะกับ localStorage):**
 
-```sql
--- ============================================
--- USERS TABLE
--- ============================================
-CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  role TEXT DEFAULT 'user' CHECK(role IN ('user', 'admin')),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+```javascript
+// ============================================
+// USERS DATA STRUCTURE
+// ============================================
+// localStorage key: 'users'
+// Format: JSON array of user objects
+const usersStructure = [
+  {
+    id: 1,                    // Integer, auto-increment
+    name: "John Doe",         // String, required
+    email: "john@example.com", // String, unique, required
+    role: "user",             // String, default 'user'
+    created_at: "2024-01-01T00:00:00.000Z" // ISO string
+  }
+];
 
--- Indexes for performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
+// ============================================
+// RECIPES DATA STRUCTURE
+// ============================================
+// localStorage key: 'recipes'
+// Format: JSON array of recipe objects
+const recipesStructure = [
+  {
+    id: 1,                    // Integer, auto-increment
+    user_id: 1,               // Integer, foreign key to users
+    user_name: "John Doe",    // String, denormalized for display
+    title: "Pad Thai",        // String, required
+    ingredients: "...",       // String, required
+    instructions: "...",      // String, required
+    image_url: "https://...", // String, optional
+    average_rating: 4.5,      // Number, calculated
+    rating_count: 10,         // Number, calculated
+    created_at: "2024-01-01T00:00:00.000Z", // ISO string
+    updated_at: "2024-01-01T00:00:00.000Z" // ISO string
+  }
+];
 
--- ============================================
--- RECIPES TABLE
--- ============================================
-CREATE TABLE recipes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  title TEXT NOT NULL,
-  ingredients TEXT NOT NULL,
-  instructions TEXT NOT NULL,
-  image_url TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+// ============================================
+// RATINGS DATA STRUCTURE
+// ============================================
+// localStorage key: 'ratings'
+// Format: JSON array of rating objects
+const ratingsStructure = [
+  {
+    id: 1,                    // Integer, auto-increment
+    recipe_id: 1,             // Integer, foreign key to recipes
+    user_id: 2,               // Integer, foreign key to users
+    user_name: "Jane Doe",    // String, denormalized for display
+    rating: 5,                // Integer, 1-5, required
+    comment: "Great recipe!", // String, optional
+    created_at: "2024-01-01T00:00:00.000Z" // ISO string
+  }
+];
 
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
 
--- Indexes for performance
-CREATE INDEX idx_recipes_user_id ON recipes(user_id);
-CREATE INDEX idx_recipes_title ON recipes(title);
-CREATE INDEX idx_recipes_created_at ON recipes(created_at DESC);
+// Get all recipes with average rating
+const getRecipesWithRatings = () => {
+  const recipes = JSON.parse(localStorage.getItem('recipes') || '[]');
+  const ratings = JSON.parse(localStorage.getItem('ratings') || '[]');
+  
+  return recipes.map(recipe => {
+    const recipeRatings = ratings.filter(r => r.recipe_id === recipe.id);
+    const avgRating = recipeRatings.length > 0
+      ? recipeRatings.reduce((sum, r) => sum + r.rating, 0) / recipeRatings.length
+      : 0;
+    
+    return {
+      ...recipe,
+      average_rating: avgRating,
+      rating_count: recipeRatings.length
+    };
+  });
+};
 
--- ============================================
--- RATINGS TABLE
--- ============================================
-CREATE TABLE ratings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  recipe_id INTEGER NOT NULL,
-  user_id INTEGER NOT NULL,
-  rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
-  comment TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+// Get user's recipes
+const getUserRecipes = (userId) => {
+  const recipes = JSON.parse(localStorage.getItem('recipes') || '[]');
+  return recipes.filter(r => r.user_id === userId);
+};
 
-  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-
-  -- Prevent users from rating the same recipe multiple times
-  UNIQUE(recipe_id, user_id)
-);
-
--- Indexes for performance
-CREATE INDEX idx_ratings_recipe_id ON ratings(recipe_id);
-CREATE INDEX idx_ratings_user_id ON ratings(user_id);
-CREATE INDEX idx_ratings_created_at ON ratings(created_at DESC);
-
--- ============================================
--- USEFUL QUERIES
--- ============================================
-
--- Get recipe with average rating
-SELECT
-  r.*,
-  u.name as author_name,
-  COALESCE(AVG(rt.rating), 0) as average_rating,
-  COUNT(rt.id) as rating_count
-FROM recipes r
-LEFT JOIN users u ON r.user_id = u.id
-LEFT JOIN ratings rt ON r.id = rt.recipe_id
-GROUP BY r.id;
-
--- Get user's recipes with ratings
-SELECT
-  r.*,
-  COALESCE(AVG(rt.rating), 0) as average_rating,
-  COUNT(rt.id) as rating_count
-FROM recipes r
-LEFT JOIN ratings rt ON r.id = rt.recipe_id
-WHERE r.user_id = ?
-GROUP BY r.id;
-
--- Check if user already rated a recipe
-SELECT id FROM ratings
-WHERE recipe_id = ? AND user_id = ?;
+// Check if user already rated a recipe
+const hasUserRated = (recipeId, userId) => {
+  const ratings = JSON.parse(localStorage.getItem('ratings') || '[]');
+  return ratings.some(r => r.recipe_id === recipeId && r.user_id === userId);
+};
 ```
 
 ---
@@ -315,110 +302,91 @@ users (1) ────────< (many) recipes
 
 #### **คำตอบจาก AI:**
 
-#### **Endpoint 1: การยืนยันตัวตนผู้ใช้ (ลงทะเบียน)**
+#### **Service Method 1: การยืนยันตัวตนผู้ใช้ (ลงทะเบียน)**
 
-```http
-POST /api/auth/register
+```javascript
+// services/authService.js
+authService.register(userData)
 ```
 
-**ต้องการการยืนยันตัวตน:** ไม่ (สาธารณะ)
-
-**Request Body:**
-```json
+**Parameters:**
+```javascript
 {
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "securePassword123"
+  name: "John Doe",
+  email: "john@example.com",
+  password: "securePassword123" // ไม่เก็บจริงใน mock mode
 }
 ```
 
-**Response (201 Created):**
-```json
+**Return Value (Promise):**
+```javascript
 {
-  "message": "User registered successfully",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "user",
-    "created_at": "2025-11-24T10:30:00Z"
-  }
+  user: {
+    id: 1,
+    name: "John Doe",
+    email: "john@example.com",
+    role: "user",
+    created_at: "2025-11-24T10:30:00Z"
+  },
+  token: "mock-token-1" // Mock token
 }
 ```
 
-**Error Response (409 Conflict):**
-```json
-{
-  "error": "Email already registered"
-}
+**Error:**
+```javascript
+throw new Error("Email already exists")
 ```
 
 **หมายเหตุการนำไปใช้:**
-- แฮชรหัสผ่านด้วย bcrypt ก่อนจัดเก็บ
-- สร้าง JWT token ที่หมดอายุ 7 วัน
-- ตรวจสอบรูปแบบอีเมล
+- ไม่เก็บรหัสผ่าน (mock authentication)
+- สร้าง mock token สำหรับ development
+- ตรวจสอบรูปแบบอีเมล (client-side)
 - ตรวจสอบอีเมลที่มีอยู่แล้วก่อนลงทะเบียน
+- บันทึกลง localStorage
 
 ---
 
-#### **Endpoint 2: สร้างสูตร**
+#### **Service Method 2: สร้างสูตร**
 
-```http
-POST /api/recipes
+```javascript
+// services/recipeService.js
+recipeService.createRecipe(recipeData)
 ```
 
-**ต้องการการยืนยันตัวตน:** ใช่ (JWT Token ใน Authorization header)
-
-**Headers:**
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Content-Type: application/json
-```
-
-**Request Body:**
-```json
+**Parameters:**
+```javascript
 {
-  "title": "Spaghetti Carbonara",
-  "ingredients": "400g spaghetti\n200g pancetta\n4 eggs\n100g Parmesan cheese\nBlack pepper\nSalt",
-  "instructions": "1. Boil pasta in salted water\n2. Fry pancetta until crispy\n3. Beat eggs with Parmesan\n4. Drain pasta, mix with pancetta\n5. Remove from heat, add egg mixture\n6. Stir quickly to create creamy sauce\n7. Season with black pepper",
-  "image_url": "https://example.com/carbonara.jpg"
+  title: "Spaghetti Carbonara",
+  ingredients: "400g spaghetti\n200g pancetta\n4 eggs\n100g Parmesan cheese\nBlack pepper\nSalt",
+  instructions: "1. Boil pasta in salted water\n2. Fry pancetta until crispy\n3. Beat eggs with Parmesan\n4. Drain pasta, mix with pancetta\n5. Remove from heat, add egg mixture\n6. Stir quickly to create creamy sauce\n7. Season with black pepper",
+  image_url: "https://example.com/carbonara.jpg"
 }
 ```
 
-**Response (201 Created):**
-```json
+**Return Value (Promise):**
+```javascript
 {
-  "message": "Recipe created successfully",
-  "recipe": {
-    "id": 15,
-    "user_id": 1,
-    "title": "Spaghetti Carbonara",
-    "ingredients": "400g spaghetti\n200g pancetta...",
-    "instructions": "1. Boil pasta...",
-    "image_url": "https://example.com/carbonara.jpg",
-    "created_at": "2025-11-24T11:00:00Z",
-    "updated_at": "2025-11-24T11:00:00Z"
-  }
+  id: 15,
+  user_id: 1,
+  user_name: "John Doe",
+  title: "Spaghetti Carbonara",
+  ingredients: "400g spaghetti\n200g pancetta...",
+  instructions: "1. Boil pasta...",
+  image_url: "https://example.com/carbonara.jpg",
+  average_rating: 0,
+  rating_count: 0,
+  created_at: "2025-11-24T11:00:00Z",
+  updated_at: "2025-11-24T11:00:00Z"
 }
 ```
 
-**Error Response (401 Unauthorized):**
-```json
-{
-  "error": "Access token required"
-}
-```
+**Error:**
+```javascript
+// ถ้าไม่ authenticated
+throw new Error("Not authenticated")
 
-**Error Response (400 Bad Request):**
-```json
-{
-  "error": "Validation failed",
-  "details": [
-    {
-      "field": "title",
-      "message": "Title must be 3-200 characters"
-    }
+// ถ้า validation failed
+throw new Error("Title must be 3-200 characters")
   ]
 }
 ```
@@ -431,91 +399,74 @@ Content-Type: application/json
 
 ---
 
-#### **Endpoint 3: เพิ่มคะแนนให้สูตร**
+#### **Service Method 3: เพิ่มคะแนนให้สูตร**
 
-```http
-POST /api/recipes/:recipeId/ratings
+```javascript
+// services/ratingService.js
+ratingService.addRating(recipeId, ratingData)
 ```
 
-**ต้องการการยืนยันตัวตน:** ใช่ (JWT Token)
-
-**Headers:**
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Content-Type: application/json
-```
-
-**พารามิเตอร์ URL:**
-- `recipeId` (integer): ID ของสูตรที่จะให้คะแนน
-
-**Request Body:**
-```json
-{
-  "rating": 5,
-  "comment": "Absolutely delicious! Easy to follow and turned out perfect."
+**Parameters:**
+```javascript
+recipeId: 15 // Integer: ID ของสูตรที่จะให้คะแนน
+ratingData: {
+  rating: 5, // Integer, 1-5
+  comment: "Absolutely delicious! Easy to follow and turned out perfect." // String, optional
 }
 ```
 
-**Response (201 Created):**
-```json
+**Return Value (Promise):**
+```javascript
 {
-  "message": "Rating added successfully",
-  "rating": {
-    "id": 42,
-    "recipe_id": 15,
-    "user_id": 2,
-    "rating": 5,
-    "comment": "Absolutely delicious! Easy to follow and turned out perfect.",
-    "user_name": "Jane Smith",
-    "created_at": "2025-11-24T12:30:00Z"
-  }
+  id: 42,
+  recipe_id: 15,
+  user_id: 2,
+  user_name: "Jane Smith",
+  rating: 5,
+  comment: "Absolutely delicious! Easy to follow and turned out perfect.",
+  created_at: "2025-11-24T12:30:00Z"
 }
 ```
 
-**Error Response (404 Not Found):**
-```json
-{
-  "error": "Recipe not found"
-}
-```
+**Error:**
+```javascript
+// ถ้าไม่ authenticated
+throw new Error("Not authenticated")
 
-**Error Response (400 Bad Request):**
-```json
-{
-  "error": "Cannot rate your own recipe"
-}
-```
+// ถ้าสูตรไม่พบ
+throw new Error("Recipe not found")
 
-**Error Response (409 Conflict):**
-```json
-{
-  "error": "You have already rated this recipe"
-}
+// ถ้าให้คะแนนสูตรของตนเอง
+throw new Error("Cannot rate your own recipe")
+
+// ถ้าให้คะแนนซ้ำ
+throw new Error("You have already rated this recipe")
 ```
 
 **หมายเหตุการนำไปใช้:**
 - ตรวจสอบว่าสูตรมีอยู่
 - ตรวจสอบว่าผู้ใช้ไม่ได้ให้คะแนนสูตรของตนเอง
-- ตรวจสอบคะแนนที่มีอยู่ (ข้อจำกัด UNIQUE)
+- ตรวจสอบคะแนนที่มีอยู่ (client-side validation)
 - ตรวจสอบคะแนนอยู่ระหว่าง 1-5
 - comment เป็นทางเลือก
+- บันทึกลง localStorage
 
 ---
 
-**สรุป Endpoints สำคัญทั้งหมด:**
+**สรุป Service Methods สำคัญทั้งหมด:**
 
-| Method | Endpoint | ต้องการ Auth | วัตถุประสงค์ |
-|--------|----------|--------------|-------------|
-| POST | `/api/auth/register` | ไม่ | ลงทะเบียนผู้ใช้ใหม่ |
-| POST | `/api/auth/login` | ไม่ | เข้าสู่ระบบผู้ใช้ |
-| GET | `/api/auth/me` | ใช่ | รับผู้ใช้ปัจจุบัน |
-| GET | `/api/recipes` | ไม่ | รับสูตรทั้งหมด (พร้อมค้นหา) |
-| GET | `/api/recipes/:id` | ไม่ | รับรายละเอียดสูตร |
-| POST | `/api/recipes` | ใช่ | สร้างสูตรใหม่ |
-| PUT | `/api/recipes/:id` | ใช่ | อัปเดตสูตร (เจ้าของเท่านั้น) |
-| DELETE | `/api/recipes/:id` | ใช่ | ลบสูตร (เจ้าของเท่านั้น) |
-| GET | `/api/recipes/:id/ratings` | ไม่ | รับคะแนนสูตร |
-| POST | `/api/recipes/:id/ratings` | ใช่ | เพิ่มคะแนนให้สูตร |
+| Service | Method | ต้องการ Auth | วัตถุประสงค์ |
+|---------|--------|--------------|-------------|
+| authService | `register(userData)` | ไม่ | ลงทะเบียนผู้ใช้ใหม่ |
+| authService | `login(credentials)` | ไม่ | เข้าสู่ระบบผู้ใช้ |
+| authService | `getCurrentUser()` | ใช่ | รับผู้ใช้ปัจจุบัน |
+| recipeService | `getAllRecipes(search)` | ไม่ | รับสูตรทั้งหมด (พร้อมค้นหา) |
+| recipeService | `getRecipeById(id)` | ไม่ | รับรายละเอียดสูตร |
+| recipeService | `createRecipe(recipeData)` | ใช่ | สร้างสูตรใหม่ |
+| recipeService | `updateRecipe(id, recipeData)` | ใช่ | อัปเดตสูตร (เจ้าของเท่านั้น) |
+| recipeService | `deleteRecipe(id)` | ใช่ | ลบสูตร (เจ้าของเท่านั้น) |
+| ratingService | `getRatings(recipeId)` | ไม่ | รับคะแนนสูตร |
+| ratingService | `addRating(recipeId, ratingData)` | ใช่ | เพิ่มคะแนนให้สูตร |
 
 ---
 
@@ -523,7 +474,7 @@ Content-Type: application/json
 
 ### กลยุทธ์การนำไปใช้ (3-5 ประโยค)
 
-Tech stack ที่ AI สร้างให้มอบรากฐานที่แข็งแกร่งซึ่งผมจะใช้ตามที่แนะนำทุกประการ โดยเฉพาะ backend แบบ Node.js + Express + SQLite และ frontend แบบ React + Tailwind รวมกัน Database schema จะถูกนำไปใช้ตามตัวอักษรพร้อม indexes และ constraints ที่แนะนำทั้งหมดเพื่อให้มั่นใจในความสมบูรณ์ของข้อมูลและประสิทธิภาพตั้งแต่เริ่มต้น สำหรับ API endpoints ผมจะปฏิบัติตามรูปแบบ RESTful ที่แนะนำทุกประการ แต่จะเพิ่มการจัดการข้อผิดพลาดและการบันทึก request เพิ่มเติมเพื่อการ debug และการตรวจสอบความปลอดภัยที่ดีขึ้น ผมวางแผนที่จะขยายการยืนยันตัวตนพื้นฐานด้วยฟังก์ชันรีเซ็ตรหัสผ่านและการยืนยันอีเมลใน iterations ในอนาคตนอกเหนือจากขอบเขต MVP ไลบรารีตรวจสอบที่แนะนำ (express-validator) และแนวทางปฏิบัติด้านความปลอดภัย (bcrypt, JWT) จะถูกนำไปใช้เป็นข้อกำหนดหลักแทนที่จะเป็นฟีเจอร์ทางเลือกเพื่อให้มั่นใจในการปฏิบัติตาม PDPA และการป้องกันช่องโหว่ OWASP ตั้งแต่วันแรก
+Tech stack ที่ AI สร้างให้มอบรากฐานที่แข็งแกร่งซึ่งผมจะใช้ตามที่แนะนำทุกประการ โดยเฉพาะ frontend แบบ React + Vite + Tailwind CSS สำหรับการพัฒนา MVP อย่างรวดเร็ว Data structure design จะถูกนำไปใช้สำหรับ localStorage พร้อมการจัดการข้อมูลอย่างมีประสิทธิภาพเพื่อให้มั่นใจในความสมบูรณ์ของข้อมูลและประสิทธิภาพตั้งแต่เริ่มต้น สำหรับ service methods ผมจะปฏิบัติตามรูปแบบที่แนะนำทุกประการ แต่จะเพิ่มการจัดการข้อผิดพลาดและการ sanitize ข้อมูลเพิ่มเติมเพื่อการ debug และการป้องกัน XSS ที่ดีขึ้น ผมวางแผนที่จะขยายการยืนยันตัวตนพื้นฐานด้วยฟังก์ชันรีเซ็ตรหัสผ่านและการยืนยันอีเมลใน iterations ในอนาคตนอกเหนือจากขอบเขต MVP เมื่อย้ายไปใช้ backend จริง การตรวจสอบข้อมูลป้อนเข้า (client-side validation) และแนวทางปฏิบัติด้านความปลอดภัย (XSS protection, input sanitization) จะถูกนำไปใช้เป็นข้อกำหนดหลักแทนที่จะเป็นฟีเจอร์ทางเลือกเพื่อให้มั่นใจในการปฏิบัติตาม PDPA และการป้องกันช่องโหว่ OWASP ตั้งแต่วันแรก หมายเหตุ: นี่เป็น mock implementation สำหรับ development - สำหรับ production ต้องใช้ backend API + database จริง
 
 ### การปรับแต่งและส่วนขยายเฉพาะ
 
@@ -546,65 +497,80 @@ Tech stack ที่ AI สร้างให้มอบรากฐานท�
 
 ---
 
-#### **2. การปรับแต่ง Database Schema**
+#### **2. การปรับแต่ง Data Structure**
 
 **สิ่งที่จะใช้โดยตรง:**
-- ตารางทั้งสาม (users, recipes, ratings) ตามที่ออกแบบทุกประการ
-- ข้อจำกัดทั้งหมด (UNIQUE, CHECK, FOREIGN KEY)
-- Indexes ทั้งหมดเพื่อการปรับปรุงประสิทธิภาพ
-- พฤติกรรม CASCADE delete
+- Data structures ทั้งสาม (users, recipes, ratings) ตามที่ออกแบบทุกประการ
+- การตรวจสอบ duplicate (client-side validation)
+- การคำนวณ average rating
+- พฤติกรรม delete (ลบ ratings ที่เกี่ยวข้องเมื่อลบ recipe)
 
 **สิ่งที่จะเพิ่ม:**
-- **Soft Deletes (อนาคต):** เพิ่มคอลัมน์ `deleted_at` เพื่อเก็บรักษาข้อมูลสำหรับ audit trail
-- **ตาราง Favorites (ส่วนขยาย):** อนุญาตให้ผู้ใช้บุ๊กมาร์กสูตรโปรด
-- **ตาราง Categories (ส่วนขยาย):** เพิ่มหมวดหมู่สูตร (อาหารเช้า อาหารเย็น ของหวาน)
-- **ตาราง Recipe Images:** หากต้องการรูปภาพหลายรูปต่อสูตรในอนาคต
-- **Full-Text Search Index:** ส่วนขยาย SQLite FTS5 เพื่อประสิทธิภาพการค้นหาที่ดีขึ้น
+- **Soft Deletes (อนาคต):** เพิ่มฟิลด์ `deleted_at` เพื่อเก็บรักษาข้อมูลสำหรับ audit trail
+- **Favorites (ส่วนขยาย):** อนุญาตให้ผู้ใช้บุ๊กมาร์กสูตรโปรด
+- **Categories (ส่วนขยาย):** เพิ่มหมวดหมู่สูตร (อาหารเช้า อาหารเย็น ของหวาน)
+- **Recipe Images:** หากต้องการรูปภาพหลายรูปต่อสูตรในอนาคต
+- **Search Optimization:** ปรับปรุงการค้นหาให้มีประสิทธิภาพมากขึ้น
 
-**SQL Migration Script:**
-```sql
--- Add soft delete support (future enhancement)
-ALTER TABLE recipes ADD COLUMN deleted_at DATETIME NULL;
-CREATE INDEX idx_recipes_deleted_at ON recipes(deleted_at);
-
--- Add category support (future enhancement)
-ALTER TABLE recipes ADD COLUMN category TEXT DEFAULT 'uncategorized';
-CREATE INDEX idx_recipes_category ON recipes(category);
+**ตัวอย่าง Data Structure ที่ปรับปรุงแล้ว:**
+```javascript
+// Enhanced recipe structure with category
+const recipe = {
+  id: 1,
+  user_id: 1,
+  title: "Pad Thai",
+  category: "dinner", // New field
+  ingredients: "...",
+  instructions: "...",
+  image_url: "https://...",
+  average_rating: 4.5,
+  rating_count: 10,
+  created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-01T00:00:00.000Z",
+  deleted_at: null // For soft delete
+};
 ```
 
 ---
 
-#### **3. การปรับแต่ง API Endpoint**
+#### **3. การปรับแต่ง Service Methods**
 
 **สิ่งที่จะใช้โดยตรง:**
-- Endpoints ที่แนะนำทั้งหมดพร้อมรูปแบบ request/response ที่แน่นอน
-- รูปแบบ URL แบบ RESTful
-- HTTP status codes (201, 400, 401, 404, 409)
-- รูปแบบ Authentication header (Bearer token)
+- Service methods ที่แนะนำทั้งหมดพร้อมรูปแบบ function calls ที่แน่นอน
+- Async simulation (delay) เพื่อเลียนแบบ API calls
+- Error handling ที่เหมาะสม
+- Mock authentication tokens
 
 **สิ่งที่จะเพิ่ม:**
-- **Pagination:** เพิ่มพารามิเตอร์ query `?page=1&limit=20` ไปยัง GET /api/recipes
-- **Filtering:** เพิ่ม `?category=dinner&minRating=4` สำหรับการกรองขั้นสูง
-- **Sorting:** เพิ่ม `?sort=rating&order=desc` สำหรับการเรียงลำดับแบบกำหนดเอง
-- **Rate Limiting:** นำ express-rate-limit middleware ไปใช้
-- **การกำหนดค่า CORS:** อนุญาตเฉพาะ origins ที่ระบุเท่านั้น
-- **API Versioning:** ใช้คำนำหน้า `/api/v1/` สำหรับความเข้ากันได้ในอนาคต
+- **Pagination:** เพิ่มพารามิเตอร์ `page` และ `limit` ไปยัง `getAllRecipes()`
+- **Filtering:** เพิ่ม `category` และ `minRating` สำหรับการกรองขั้นสูง
+- **Sorting:** เพิ่ม `sort` และ `order` สำหรับการเรียงลำดับแบบกำหนดเอง
+- **Caching:** ใช้ memory cache เพื่อลดการอ่านจาก localStorage
+- **Data Validation:** เพิ่มการตรวจสอบข้อมูลที่เข้มงวดขึ้น
 
-**ตัวอย่าง Endpoint ที่ปรับปรุงแล้ว:**
+**ตัวอย่าง Service Method ที่ปรับปรุงแล้ว:**
 ```javascript
-// Enhanced GET /api/recipes with pagination and filtering
-GET /api/recipes?search=pasta&category=dinner&minRating=4&page=1&limit=20&sort=rating&order=desc
+// Enhanced getAllRecipes with pagination and filtering
+recipeService.getAllRecipes({
+  search: "pasta",
+  category: "dinner",
+  minRating: 4,
+  page: 1,
+  limit: 20,
+  sort: "rating",
+  order: "desc"
+})
 
-Response:
+// Returns:
 {
-  "recipes": [...],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 150,
-    "totalPages": 8,
-    "hasNext": true,
-    "hasPrev": false
+  recipes: [...],
+  pagination: {
+    page: 1,
+    limit: 20,
+    total: 150,
+    totalPages: 8,
+    hasNext: true,
+    hasPrev: false
   }
 }
 ```
@@ -614,20 +580,28 @@ Response:
 #### **4. การปรับปรุงความปลอดภัย**
 
 **ตามคำแนะนำของ AI ผมจะเพิ่ม:**
-- **Helmet.js:** ตั้งค่า security HTTP headers
-- **express-mongo-sanitize:** ป้องกัน NoSQL injection (แม้ว่าจะใช้ SQLite)
-- **xss-clean:** ทำความสะอาดข้อมูลป้อนเข้าของผู้ใช้เพื่อป้องกัน XSS
-- **hpp:** ป้องกัน HTTP parameter pollution
-- **CORS whitelist:** อนุญาตเฉพาะ frontend origins ที่ระบุ
+- **Input Sanitization:** ทำความสะอาดข้อมูลป้อนเข้าของผู้ใช้เพื่อป้องกัน XSS
+- **Client-side Validation:** ตรวจสอบข้อมูลก่อนบันทึกลง localStorage
+- **Protected Routes:** ใช้ React Router protected routes
+- **Ownership Verification:** ตรวจสอบความเป็นเจ้าของก่อนแก้ไข/ลบ
+- **Content Security Policy:** ใช้ CSP headers ใน production build
 
 ```javascript
-import helmet from 'helmet';
-import mongoSanitize from 'express-mongo-sanitize';
-import xss from 'xss-clean';
+// utils/sanitize.js
+export const sanitizeInput = (input) => {
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .trim();
+};
 
-app.use(helmet());
-app.use(mongoSanitize());
-app.use(xss());
+// components/ProtectedRoute.jsx
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  return user ? children : <Navigate to="/login" />;
+};
 ```
 
 ---
@@ -635,9 +609,9 @@ app.use(xss());
 #### **5. กลยุทธ์การทดสอบ**
 
 **สิ่งที่ AI ไม่ได้ครอบคลุม (ผมจะเพิ่ม):**
-- **Unit Tests:** Jest สำหรับทดสอบ controllers และ utilities
-- **Integration Tests:** Supertest สำหรับทดสอบ API endpoints
-- **Frontend Tests:** React Testing Library สำหรับทดสอบ components
+- **Unit Tests:** Jest สำหรับทดสอบ service methods และ utilities
+- **Component Tests:** React Testing Library สำหรับทดสอบ components
+- **Integration Tests:** ทดสอบการทำงานร่วมกันของ components และ services
 - **E2E Tests:** Playwright หรือ Cypress สำหรับ user flows ทั้งหมด
 - **เป้าหมาย Coverage:** มุ่งหวัง code coverage 80%+
 

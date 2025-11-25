@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { FaUtensils, FaSearch } from 'react-icons/fa';
 import { recipeService } from '../services/recipeService';
 import RecipeList from '../components/Recipe/RecipeList';
 
 const HomePage = () => {
+  const location = useLocation();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    loadRecipes();
+    setSearch('');
+    loadRecipes('');
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleResetSearch = () => {
+      setSearch('');
+      loadRecipes('');
+    };
+
+    window.addEventListener('resetHomeSearch', handleResetSearch);
+    return () => {
+      window.removeEventListener('resetHomeSearch', handleResetSearch);
+    };
   }, []);
 
-  const loadRecipes = async () => {
+  const loadRecipes = async (searchQuery = '') => {
     try {
       setLoading(true);
-      const data = await recipeService.getAllRecipes(search);
+      const data = await recipeService.getAllRecipes(searchQuery);
       setRecipes(data);
     } catch (error) {
       console.error('Error loading recipes:', error);
@@ -26,12 +41,11 @@ const HomePage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    loadRecipes();
+    loadRecipes(search);
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
       <div className="text-center mb-12">
         <div className="text-6xl mb-4 flex justify-center">
           <FaUtensils className="text-indigo-600" />
@@ -44,7 +58,6 @@ const HomePage = () => {
         </p>
       </div>
 
-      {/* Search Bar */}
       <form onSubmit={handleSearch} className="mb-12 max-w-2xl mx-auto">
         <div className="flex gap-3 bg-white rounded-xl shadow-md border border-gray-200 p-2">
           <div className="flex-1 flex items-center gap-3 px-2">
@@ -66,7 +79,6 @@ const HomePage = () => {
         </div>
       </form>
 
-      {/* Recipe List */}
       <RecipeList recipes={recipes} loading={loading} />
     </div>
   );

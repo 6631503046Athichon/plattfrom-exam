@@ -11,7 +11,7 @@
 
 ### ภาพรวม
 
-สถาปัตยกรรมนี้เป็นไปตามแบบ **3-tier architecture pattern** ประกอบด้วย Presentation Layer (Frontend), Application Layer (Backend) และ Data Layer (Database) ระบบใช้การสื่อสารแบบ RESTful API ระหว่างชั้นต่างๆ พร้อมกับการยืนยันตัวตนแบบ JWT
+สถาปัตยกรรมนี้เป็นไปตามแบบ **Frontend-only architecture** ประกอบด้วย Presentation Layer (React Frontend) และ Data Layer (Browser localStorage) ระบบใช้ service layer สำหรับการจัดการข้อมูลใน localStorage พร้อมกับการยืนยันตัวตนแบบ mock tokens หมายเหตุ: นี่เป็น mock implementation สำหรับ development - สำหรับ production ต้องใช้ backend API + database จริง
 
 ---
 
@@ -42,125 +42,73 @@
 │  │  └────────────────────────────────────────────────────┘          │ │
 │  │                                                                    │ │
 │  │  ┌────────────────────────────────────────────────────┐          │ │
-│  │  │      Axios HTTP Client + JWT Interceptors          │          │ │
+│  │  │  AuthContext (Global State - User & Mock Token)     │          │ │
+│  │  │  • Authentication State                            │          │ │
+│  │  │  • User Information                               │          │ │
+│  │  │  • Login/Logout Functions                         │          │ │
 │  │  └────────────────────────────────────────────────────┘          │ │
 │  │                                                                    │ │
 │  │  ┌────────────────────────────────────────────────────┐          │ │
-│  │  │  AuthContext (Global State - User & Token)         │          │ │
+│  │  │  Service Layer (Mock Data Management)               │          │ │
+│  │  │  • authService: register(), login(), logout()       │          │ │
+│  │  │  • recipeService: CRUD operations                  │          │ │
+│  │  │  • ratingService: addRating(), getRatings()       │          │ │
+│  │  │  • Async simulation (delay)                        │          │ │
+│  │  │  • Input validation & sanitization                 │          │ │
+│  │  │  • Ownership verification                          │          │ │
 │  │  └────────────────────────────────────────────────────┘          │ │
 │  └──────────────────────────────────────────────────────────────────┘ │
 │                                                                          │
 │  Running on: http://localhost:5173 (Vite Dev Server)                   │
 │  Styling: Tailwind CSS                                                  │
+│  Build Tool: Vite                                                       │
 └──────────────────────────────────┬───────────────────────────────────────┘
                                    │
-                                   │ HTTP/HTTPS Requests
-                                   │ (JSON + JWT Token in Header)
+                                   │ localStorage API
+                                   │ (getItem, setItem, removeItem)
                                    │
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         APPLICATION LAYER                                │
-│                             (Backend API)                                │
+│                          DATA LAYER                                     │
+│                      (Browser localStorage)                             │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │  ┌──────────────────────────────────────────────────────────────────┐ │
-│  │                   Express.js Server                               │ │
+│  │                   Browser localStorage                             │ │
 │  │                                                                    │ │
 │  │  ┌─────────────────────────────────────────────────────────────┐ │ │
-│  │  │                    Middleware Chain                          │ │ │
+│  │  │                    Data Storage                              │ │ │
 │  │  ├─────────────────────────────────────────────────────────────┤ │ │
-│  │  │ 1. CORS Middleware          (Allow frontend origin)         │ │ │
-│  │  │ 2. JSON Body Parser         (Parse request body)            │ │ │
-│  │  │ 3. Request Logger           (Log all requests)              │ │ │
-│  │  │ 4. Authentication Middleware (Verify JWT for protected)     │ │ │
-│  │  │ 5. Validation Middleware    (express-validator)             │ │ │
-│  │  │ 6. Error Handler Middleware (Catch all errors)              │ │ │
+│  │  │ Key: 'users'                                                │ │ │
+│  │  │ Value: JSON array of user objects                          │ │ │
+│  │  │ • id, name, email, role, created_at                        │ │ │
+│  │  │                                                             │ │ │
+│  │  │ Key: 'recipes'                                             │ │ │
+│  │  │ Value: JSON array of recipe objects                        │ │ │
+│  │  │ • id, user_id, title, ingredients, instructions          │ │ │
+│  │  │ • image_url, average_rating, rating_count                 │ │ │
+│  │  │ • created_at, updated_at                                  │ │ │
+│  │  │                                                             │ │ │
+│  │  │ Key: 'ratings'                                             │ │ │
+│  │  │ Value: JSON array of rating objects                        │ │ │
+│  │  │ • id, recipe_id, user_id, rating, comment                 │ │ │
+│  │  │ • created_at                                               │ │ │
+│  │  │                                                             │ │ │
+│  │  │ Key: 'currentUser'                                        │ │ │
+│  │  │ Value: JSON object of current logged-in user              │ │ │
+│  │  │ • id, name, email, role                                   │ │ │
 │  │  └─────────────────────────────────────────────────────────────┘ │ │
 │  │                                                                    │ │
-│  │  ┌────────────────────┐  ┌────────────────────┐                  │ │
-│  │  │   Route Handlers   │  │   Controllers      │                  │ │
-│  │  ├────────────────────┤  ├────────────────────┤                  │ │
-│  │  │ /api/auth/*        │─>│ authController     │                  │ │
-│  │  │ • POST /register   │  │ • register()       │                  │ │
-│  │  │ • POST /login      │  │ • login()          │                  │ │
-│  │  │ • GET  /me         │  │ • getCurrentUser() │                  │ │
-│  │  │                    │  │                    │                  │ │
-│  │  │ /api/recipes/*     │─>│ recipeController   │                  │ │
-│  │  │ • GET    /         │  │ • getAllRecipes()  │                  │ │
-│  │  │ • GET    /:id      │  │ • getRecipeById()  │                  │ │
-│  │  │ • POST   /         │  │ • createRecipe()   │                  │ │
-│  │  │ • PUT    /:id      │  │ • updateRecipe()   │                  │ │
-│  │  │ • DELETE /:id      │  │ • deleteRecipe()   │                  │ │
-│  │  │                    │  │                    │                  │ │
-│  │  │ /api/recipes/:id/  │─>│ ratingController   │                  │ │
-│  │  │      ratings       │  │ • getRatings()     │                  │ │
-│  │  │ • GET  /           │  │ • addRating()      │                  │ │
-│  │  │ • POST /           │  │ • updateRating()   │                  │ │
-│  │  └────────────────────┘  │ • deleteRating()   │                  │ │
-│  │                          └────────────────────┘                  │ │
-│  │                                                                    │ │
-│  │  ┌─────────────────────────────────────────────────────────────┐ │ │
-│  │  │              Security & Validation Layer                     │ │ │
-│  │  ├─────────────────────────────────────────────────────────────┤ │ │
-│  │  │ • JWT Token Verification (jsonwebtoken)                     │ │ │
-│  │  │ • Password Hashing (bcryptjs - 10 salt rounds)              │ │ │
-│  │  │ • Input Validation (express-validator)                      │ │ │
-│  │  │ • SQL Injection Protection (Parameterized queries)          │ │ │
-│  │  │ • Access Control (User ownership checks)                    │ │ │
-│  │  └─────────────────────────────────────────────────────────────┘ │ │
+│  │  ข้อจำกัด:                                                          │ │
+│  │  • ขนาดสูงสุด: ~5-10MB ต่อ domain                                │ │
+│  │  • Client-side only (ไม่ sync ระหว่าง devices)                  │ │
+│  │  • ไม่ปลอดภัยสำหรับข้อมูลที่ละเอียดอ่อน                            │ │
+│  │  • หมายเหตุ: สำหรับ production ต้องใช้ backend + database จริง   │ │
 │  └──────────────────────────────────────────────────────────────────┘ │
 │                                                                          │
-│  Running on: http://localhost:5000                                      │
-│  Environment: .env file (JWT_SECRET, PORT)                              │
-└──────────────────────────────────┬───────────────────────────────────────┘
-                                   │
-                                   │ SQL Queries
-                                   │ (Parameterized)
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            DATA LAYER                                    │
-│                           (Database)                                     │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  ┌──────────────────────────────────────────────────────────────────┐ │
-│  │                    SQLite3 Database                               │ │
-│  │                   (database.sqlite)                               │ │
-│  │                                                                    │ │
-│  │  ┌────────────┐     ┌────────────┐     ┌────────────┐           │ │
-│  │  │   users    │     │  recipes   │     │  ratings   │           │ │
-│  │  ├────────────┤     ├────────────┤     ├────────────┤           │ │
-│  │  │ id (PK)    │     │ id (PK)    │     │ id (PK)    │           │ │
-│  │  │ name       │────<│ user_id FK │     │ recipe_id  │           │ │
-│  │  │ email      │     │ title      │<────│ user_id    │           │ │
-│  │  │ pass_hash  │     │ ingredient │     │ rating     │           │ │
-│  │  │ role       │     │ instructio │     │ comment    │           │ │
-│  │  │ created_at │     │ image_url  │     │ created_at │           │ │
-│  │  └────────────┘     │ created_at │     └────────────┘           │ │
-│  │                     │ updated_at │                               │ │
-│  │                     └────────────┘                               │ │
-│  │                                                                    │ │
-│  │  Relationships:                                                   │ │
-│  │  • users(1) -> recipes(many)                                     │ │
-│  │  • users(1) -> ratings(many)                                     │ │
-│  │  • recipes(1) -> ratings(many)                                   │ │
-│  │  • UNIQUE(recipe_id, user_id) in ratings                         │ │
-│  │                                                                    │ │
-│  │  Indexes:                                                         │ │
-│  │  • idx_users_email                                               │ │
-│  │  • idx_recipes_user_id                                           │ │
-│  │  • idx_recipes_title                                             │ │
-│  │  • idx_ratings_recipe_id                                         │ │
-│  │  • idx_ratings_user_id                                           │ │
-│  │                                                                    │ │
-│  │  Constraints:                                                     │ │
-│  │  • CHECK(rating >= 1 AND rating <= 5)                           │ │
-│  │  • CHECK(role IN ('user', 'admin'))                             │ │
-│  │  • FOREIGN KEY with CASCADE DELETE                              │ │
-│  └──────────────────────────────────────────────────────────────────┘ │
-│                                                                          │
-│  Storage: File-based (database.sqlite)                                  │
-│  Query Interface: Parameterized queries via sqlite3 npm package         │
+│  Storage: Browser localStorage (client-side)                            │
+│  Data Format: JSON strings                                               │
+│  Access: JavaScript localStorage API                                    │
 └─────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -214,34 +162,38 @@
 #### **Flow 2: การสร้างสูตรอาหาร (Protected)**
 
 ```
-┌──────────┐   1. Submit + JWT      ┌──────────┐   2. Verify JWT   ┌──────────┐
-│  Recipe  │   in Authorization     │   Auth   │                   │   JWT    │
-│   Form   │──────────────────────>│Middleware│─────────────────>│  Verify  │
-│          │       Header           │          │                   │          │
+┌──────────┐   1. Submit Form      ┌──────────┐   2. Check Auth    ┌──────────┐
+│  Recipe  │──────────────────────>│Protected │                   │ AuthContext│
+│   Form   │                        │  Route   │─────────────────>│  (User)   │
+│          │                        │          │                   │          │
 └──────────┘                        └──────────┘                   └──────────┘
                                          │                               │
-                                         │ 3. Valid? Attach req.user    │
+                                         │ 3. Authenticated?            │
                                          │<──────────────────────────────┘
                                          ▼
                                     ┌──────────┐
                                     │ Validate │
                                     │  Input   │
+                                    │(Client)  │
                                     └──────────┘
                                          │ 4. Check title, ingredients, etc.
+                                         │    Sanitize input (XSS protection)
                                          ▼
                                     ┌──────────┐
-                                    │  Recipe  │
-                                    │Controller│
+                                    │ Recipe   │
+                                    │ Service  │
                                     └──────────┘
-                                         │ 5. INSERT recipe with req.user.id
+                                         │ 5. Create recipe with currentUser.id
+                                         │    Add delay (simulate API)
                                          ▼
                                     ┌──────────┐
-                                    │  SQLite  │
-                                    │ Database │
+                                    │localStorage│
+                                    │ (recipes) │
                                     └──────────┘
-                                         │ 6. Return created recipe
+                                         │ 6. Save to localStorage
+                                         │    Return created recipe
                                          ▼
-                                    [Send 201 Response]
+                                    [Update UI State]
 ```
 
 ---
@@ -249,17 +201,25 @@
 #### **Flow 3: การดูสูตรอาหารพร้อมคะแนน (Public)**
 
 ```
-┌──────────┐   1. GET /recipes/:id   ┌──────────┐                   ┌──────────┐
-│  Recipe  │───────────────────────>│  Recipe  │  2. Complex Query │  SQLite  │
-│ Detail   │                         │Controller│─────────────────>│ Database │
-│  Page    │                         │          │  (JOIN 3 tables)  │          │
-│          │                         │          │<──────────────────│          │
-└──────────┘                         └──────────┘  3. Recipe + Avg  └──────────┘
-     ▲                                    │            Rating
+┌──────────┐   1. Load Page        ┌──────────┐   2. Get Recipe    ┌──────────┐
+│  Recipe  │───────────────────────>│ Recipe   │                   │ Recipe   │
+│ Detail   │                        │ Service  │─────────────────>│ Service  │
+│  Page    │                        │          │                   │          │
+│          │                        │          │                   │          │
+└──────────┘                        └──────────┘                   └──────────┘
+     ▲                                    │                               │
+     │                                    │ 3. Read from localStorage    │
+     │                                    │<──────────────────────────────┘
+     │                                    │    • recipes
+     │                                    │    • ratings
+     │                                    │    • users
+     │                                    │
+     │                                    │ 4. Calculate average rating
+     │                                    │    Filter ratings by recipe_id
      │                                    │
      │ 5. Display recipe + ratings        │
      │                                    ▼
-     └────────────────────────────────  4. Send JSON Response
+     └────────────────────────────────  Return combined data
                                           {
                                             recipe: {...},
                                             average_rating: 4.5,
@@ -275,37 +235,40 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     SECURITY LAYERS                              │
+│                  (Frontend-only Implementation)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  Layer 1: Transport Security                                    │
-│  ├─ HTTPS (Production)                                          │
-│  ├─ CORS restrictions                                           │
-│  └─ Secure headers (helmet.js)                                  │
+│  Layer 1: Client-side Security                                  │
+│  ├─ React's built-in XSS protection (auto-escaping)            │
+│  ├─ Content Security Policy (CSP) headers                      │
+│  └─ HTTPS (Production deployment)                              │
 │                                                                  │
-│  Layer 2: Authentication & Authorization                        │
-│  ├─ JWT tokens (7-day expiration)                              │
-│  ├─ Bearer token in Authorization header                        │
-│  ├─ Password hashing (bcrypt, 10 rounds)                       │
-│  └─ User ownership verification                                 │
+│  Layer 2: Authentication & Authorization                       │
+│  ├─ Mock token system (localStorage)                            │
+│  ├─ Protected Routes (React Router)                            │
+│  ├─ AuthContext for global auth state                          │
+│  └─ User ownership verification (client-side)                  │
 │                                                                  │
-│  Layer 3: Input Validation                                      │
-│  ├─ express-validator on all endpoints                          │
+│  Layer 3: Input Validation & Sanitization                      │
+│  ├─ Client-side validation on all forms                        │
 │  ├─ Type checking (string, number, email)                      │
 │  ├─ Length validation (min/max)                                 │
-│  └─ Sanitization (trim, escape HTML)                           │
+│  └─ Sanitization (trim, escape HTML, prevent XSS)              │
 │                                                                  │
-│  Layer 4: Database Security                                     │
-│  ├─ Parameterized queries (NO string concatenation)            │
-│  ├─ Foreign key constraints                                     │
-│  ├─ CHECK constraints (rating 1-5)                             │
-│  ├─ UNIQUE constraints (prevent duplicates)                    │
-│  └─ CASCADE DELETE for data integrity                          │
+│  Layer 4: Data Integrity (localStorage)                        │
+│  ├─ Client-side validation (rating 1-5)                        │
+│  ├─ Duplicate checking (prevent duplicate ratings)             │
+│  ├─ Ownership checks before update/delete                      │
+│  └─ Data structure validation                                  │
 │                                                                  │
 │  Layer 5: Error Handling                                        │
-│  ├─ Global error handler middleware                             │
+│  ├─ Try-catch blocks in async operations                       │
+│  ├─ User-friendly error messages                               │
 │  ├─ No sensitive data in error messages                        │
-│  ├─ Logging (access logs, error logs)                          │
-│  └─ 404 handler for undefined routes                           │
+│  └─ Graceful degradation                                       │
+│                                                                  │
+│  หมายเหตุ: นี่เป็น mock implementation สำหรับ development        │
+│            สำหรับ production ต้องใช้ backend API + database จริง│
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -318,18 +281,17 @@
 |------|-----------|-----------|---------|
 | **Frontend** | React.js | ไลบรารีสำหรับสร้าง UI | 18+ |
 | | React Router | จัดการ routing ฝั่ง client | 6 |
-| | Axios | ตัวจัดการ HTTP client | Latest |
 | | Tailwind CSS | จัดการ styling | 3+ |
 | | Vite | เครื่องมือ build | Latest |
-| **Backend** | Node.js | JavaScript runtime | 18+ LTS |
-| | Express.js | Web framework | 4 |
-| | sqlite3 | Database driver | Latest |
-| **Database** | SQLite | ฐานข้อมูล SQL | 3 |
-| **Security** | jsonwebtoken | การยืนยันตัวตนด้วย JWT | 9+ |
-| | bcryptjs | การแฮชรหัสผ่าน | 2+ |
-| | express-validator | การตรวจสอบความถูกต้องของ input | 7+ |
-| **Utilities** | cors | CORS middleware | Latest |
-| | dotenv | จัดการ environment variables | Latest |
+| | React Icons | ไอคอนสำเร็จรูป | Latest |
+| **Data Storage** | localStorage | Browser storage API | Built-in |
+| **Security** | Client-side validation | การตรวจสอบข้อมูลป้อนเข้า | Custom |
+| | Input sanitization | ป้องกัน XSS attacks | Custom |
+| | Protected Routes | การควบคุมการเข้าถึง | React Router |
+| **Utilities** | React Context API | Global state management | Built-in |
+| | JSON | Data serialization | Built-in |
+| **หมายเหตุ** | Mock implementation | สำหรับ development เท่านั้น | - |
+| | Production | ต้องใช้ backend API + database จริง | - |
 
 ---
 

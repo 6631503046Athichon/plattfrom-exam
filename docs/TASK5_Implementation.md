@@ -10,7 +10,7 @@
 
 สำหรับ Task 5 ผมเลือก **Option B: Frontend Page** โดยใช้ React.js และเทคโนโลยีเว็บสมัยใหม่
 
-> **หมายเหตุ**: Frontend **รวมเข้ากับ backend API อย่างสมบูรณ์** (Option A) การดำเนินการข้อมูลทั้งหมด (create, read, update, delete) สื่อสารกับ backend ด้วย Express.js ผ่าน RESTful APIs แอปพลิเคชันต้องการให้ backend server ทำงานอยู่เพื่อใช้งานได้อย่างสมบูรณ์
+> **หมายเหตุ**: Frontend ใช้ **mock data ผ่าน localStorage** สำหรับการพัฒนา MVP การดำเนินการข้อมูลทั้งหมด (create, read, update, delete) ทำงานผ่าน service layer ที่ใช้ localStorage แทน backend API แอปพลิเคชันทำงานได้ทันทีโดยไม่ต้องมี backend server หมายเหตุ: นี่เป็น mock implementation สำหรับ development - สำหรับ production ต้องใช้ backend API + database จริง
 
 ---
 
@@ -25,12 +25,13 @@
 - **State Management**: React Context API (สถานะการยืนยันตัวตนแบบ global)
 - **Data Storage**: localStorage (การจัดเก็บ mock data บน browser)
 
-### Backend Integration
-- **API Communication**: Axios HTTP client พร้อม interceptors
-- **Data Source**: Express.js backend API (Option A)
-- **Authentication**: การยืนยันตัวตนด้วย JWT token พร้อม automatic header injection
-- **Real-time Updates**: เรียก API โดยตรงสำหรับการดำเนินการ CRUD ทั้งหมด
-- **Error Handling**: การจัดการข้อผิดพลาดอย่างครอบคลุมสำหรับความล้มเหลวของ API
+### Data Storage & Services
+- **Data Storage**: Browser localStorage API
+- **Service Layer**: Mock data services (authService, recipeService, ratingService)
+- **Authentication**: Mock token system (localStorage-based)
+- **Data Operations**: CRUD operations ผ่าน localStorage
+- **Async Simulation**: Delay functions เพื่อเลียนแบบ API calls
+- **Error Handling**: การจัดการข้อผิดพลาดอย่างครอบคลุมสำหรับ operations ทั้งหมด
 
 ---
 

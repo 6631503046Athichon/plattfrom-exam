@@ -15,49 +15,57 @@
 
 Broken Access Control เกิดขึ้นเมื่อผู้ใช้สามารถกระทำการนอกเหนือจากสิทธิ์ที่ตั้งใจไว้ ในแพลตฟอร์มแชร์สูตรอาหารของเรา มีหลายสถานการณ์ที่อาจเผยให้เห็นช่องโหว่นี้:
 
-- **การแก้ไขสูตรโดยไม่ได้รับอนุญาต:** ผู้ใช้ที่เป็นอันตรายอาจพยายามแก้ไขหรือลบสูตรอาหารที่สร้างโดยผู้ใช้อื่นโดยเรียก API endpoints โดยตรงด้วย recipe IDs ที่แตกต่างกัน
-- **การจัดการคะแนน:** ผู้ใช้อาจพยายามให้คะแนนสูตรเดียวกันหลายครั้งโดยการปรับแต่ง API requests
-- **การเข้าถึงฟังก์ชันผู้ดูแลระบบ:** ผู้ใช้ทั่วไปอาจพยายามเข้าถึงฟังก์ชันที่เฉพาะผู้ดูแลหากไม่ได้รับการป้องกันอย่างเหมาะสม
-- **การเปิดเผยข้อมูลโปรไฟล์:** ผู้ใช้อาจเข้าถึงข้อมูลส่วนตัวของผู้ใช้อื่น (อีเมล, password hash) ผ่านการปรับแต่ง API
+- **การแก้ไขสูตรโดยไม่ได้รับอนุญาต:** ผู้ใช้ที่เป็นอันตรายอาจพยายามแก้ไขหรือลบสูตรอาหารที่สร้างโดยผู้ใช้อื่นโดยการแก้ไข localStorage โดยตรงหรือใช้ browser DevTools
+- **การจัดการคะแนน:** ผู้ใช้อาจพยายามให้คะแนนสูตรเดียวกันหลายครั้งโดยการแก้ไขข้อมูลใน localStorage
+- **การเข้าถึงข้อมูลผู้ใช้อื่น:** ผู้ใช้ทั่วไปอาจเข้าถึงข้อมูลส่วนตัวของผู้ใช้อื่น (อีเมล, user data) ผ่านการอ่าน localStorage
+- **การข้ามการตรวจสอบ authentication:** ผู้ใช้อาจแก้ไข localStorage เพื่อเพิ่ม mock token หรือเปลี่ยน user ID
 
 **ผลกระทบในโลกจริง:**
 - ผู้ใช้ A สร้างสูตรที่ได้รับความนิยม
-- ผู้ใช้ B แก้ไข recipe ID ใน API request และลบสูตรของผู้ใช้ A
+- ผู้ใช้ B แก้ไข localStorage โดยตรงและลบสูตรของผู้ใช้ A
 - แพลตฟอร์มสูญเสียความไว้วางใจและเนื้อหาที่มีคุณค่า
 
 #### วิธีการบรรเทา
 
+**Mitigation method (สรุป):**
+
+- ตรวจสอบความเป็นเจ้าของ (user_id) ก่อนอนุญาตให้แก้ไข/ลบ โดยเปรียบเทียบ recipe.user_id กับ currentUser.id จาก localStorage และตรวจสอบ currentUser.role === 'admin' สำหรับสิทธิ์ admin หากไม่ได้รับอนุญาตให้ throw error
+
 **การนำไปใช้ในแพลตฟอร์มของเรา:**
 
 ```javascript
-// middleware/auth.js
-export const authenticateToken = async (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Access token required' });
-
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  req.user = await getUserById(decoded.userId);
-  next();
-};
-
-// controllers/recipeController.js
-export const updateRecipe = async (req, res) => {
-  const recipe = await getRecipeById(req.params.id);
+// services/recipeService.js
+export const updateRecipe = async (id, recipeData) => {
+  const recipes = getStoredRecipes();
+  const recipe = recipes.find(r => r.id === parseInt(id));
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
   // ตรวจสอบความเป็นเจ้าของก่อนอนุญาตให้อัปเดต
-  if (recipe.user_id !== req.user.id && req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Not authorized' });
+  if (!currentUser || recipe.user_id !== currentUser.id) {
+    throw new Error('Not authorized to update this recipe');
   }
 
   // ดำเนินการอัปเดต
+  const index = recipes.findIndex(r => r.id === parseInt(id));
+  recipes[index] = { ...recipes[index], ...recipeData };
+  saveRecipes(recipes);
+  return recipes[index];
+};
+
+// components/RecipeForm.jsx - Protected Route
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  return user ? children : <Navigate to="/login" />;
 };
 ```
 
 **มาตรการป้องกัน:**
-1. **การยืนยันตัวตนด้วย JWT:** ต้องการ tokens ที่ถูกต้องสำหรับ protected endpoints
-2. **การตรวจสอบความเป็นเจ้าของ:** ตรวจสอบความเป็นเจ้าของของผู้ใช้ก่อนการดำเนินการแก้ไข/ลบ
-3. **การควบคุมการเข้าถึงตามบทบาท (RBAC):** ใช้บทบาทผู้ใช้และผู้ดูแลระบบ
-4. **ข้อจำกัดของฐานข้อมูล:** ข้อจำกัด UNIQUE บน (recipe_id, user_id) ในตาราง ratings ป้องกันการให้คะแนนซ้ำ
+1. **การตรวจสอบความเป็นเจ้าของ:** ตรวจสอบ user_id จาก localStorage ก่อนการดำเนินการแก้ไข/ลบทุกครั้ง
+2. **Protected Routes:** ใช้ React Router protected routes เพื่อป้องกันการเข้าถึงหน้าที่ต้อง authentication
+3. **การตรวจสอบ client-side:** ตรวจสอบ authentication state ก่อนแสดงปุ่ม Edit/Delete
+4. **การตรวจสอบ duplicate:** ตรวจสอบ duplicate rating ก่อนบันทึกลง localStorage
+5. **การแยกข้อมูลตาม user:** จัดเก็บข้อมูลแยกตาม user_id เพื่อลดความเสี่ยงการเข้าถึงข้อมูลผู้อื่น
 
 ---
 
@@ -65,79 +73,91 @@ export const updateRecipe = async (req, res) => {
 
 #### เหตุใดจึงเป็นความเสี่ยงสำหรับแพลตฟอร์มของเรา
 
-Cryptographic Failures (เดิมเรียกว่า Sensitive Data Exposure) เกิดขึ้นเมื่อข้อมูลที่ละเอียดอ่อนไม่ได้รับการป้องกันอย่างเหมาะสม ในแพลตฟอร์มของเรา เราจัดการกับ:
+Cryptographic Failures (เดิมเรียกว่า Sensitive Data Exposure) เกิดขึ้นเมื่อข้อมูลที่ละเอียดอ่อนไม่ได้รับการป้องกันอย่างเหมาะสม ในแพลตฟอร์ม frontend-only ของเรา เราจัดการกับ:
 
-- **รหัสผ่านผู้ใช้:** ข้อมูลที่ละเอียดอ่อนที่สำคัญที่สุด
-- **JWT Tokens:** ข้อมูลประจำตัวสำหรับการยืนยันตัวตน
+- **ข้อมูลผู้ใช้ใน localStorage:** ข้อมูลส่วนบุคคลที่สามารถระบุตัวตนได้ (PII) ถูกจัดเก็บใน localStorage
 - **ที่อยู่อีเมล:** ข้อมูลส่วนบุคคลที่สามารถระบุตัวตนได้ (PII)
+- **Mock tokens:** ข้อมูลประจำตัวสำหรับการยืนยันตัวตน (แม้จะเป็น mock)
 - **ความคิดเห็นของผู้ใช้:** อาจมีข้อมูลส่วนตัว
 
 **ผลกระทบในโลกจริง:**
-- การละเมิดฐานข้อมูลเผยรหัสผ่านแบบข้อความธรรมดา
-- ผู้โจมตีเข้าถึงบัญชีผู้ใช้ทั้งหมด
-- ผู้ใช้ที่ใช้รหัสผ่านซ้ำกันในหลายเว็บไซต์ถูกบุกรุกในหลายแพลตฟอร์ม
+- ผู้ใช้สามารถเข้าถึงข้อมูลใน localStorage ได้โดยตรงผ่าน browser DevTools
+- ข้อมูลผู้ใช้ทั้งหมดถูกจัดเก็บในรูปแบบ plain text ใน localStorage
+- ผู้ใช้ที่ใช้รหัสผ่านซ้ำกันอาจเสี่ยงหากมีการเข้าถึง localStorage
 - ความรับผิดทางกฎหมายภายใต้ PDPA สำหรับการละเมิดข้อมูล
 
 **สิ่งที่อาจผิดพลาด:**
-- จัดเก็บรหัสผ่านแบบข้อความธรรมดาหรือใช้การแฮชที่อ่อนแอ (MD5, SHA1)
-- ส่งข้อมูลที่ละเอียดอ่อนผ่าน HTTP แทน HTTPS
-- เปิดเผย JWT secrets ในโค้ดฝั่งไคลเอนต์
-- ไม่ตั้งค่า secure flags บน cookies
+- จัดเก็บข้อมูลส่วนตัวใน localStorage โดยไม่มีการป้องกัน
+- ไม่มีการ sanitize ข้อมูลก่อนบันทึก
+- เปิดเผยข้อมูลผู้ใช้อื่นใน localStorage
+- ไม่มีการจำกัดการเข้าถึงข้อมูลตาม user ID
 
 #### วิธีการบรรเทา
+
+**Mitigation method (สรุป):**
+
+- ไม่เก็บรหัสผ่านใน localStorage (mock authentication mode) เก็บเฉพาะข้อมูลผู้ใช้ที่จำเป็น (name, email, role) และแยกข้อมูลตาม user_id สำหรับ production ใช้ backend API พร้อม database ที่เข้ารหัสและ HTTPS สำหรับการส่งข้อมูลทั้งหมด
 
 **การนำไปใช้ในแพลตฟอร์มของเรา:**
 
 ```javascript
-// การแฮชรหัสผ่านด้วย bcrypt
-import bcrypt from 'bcryptjs';
+// services/authService.js - Mock Authentication
+export const authService = {
+  register: async (userData) => {
+    const users = getStoredUsers();
+    
+    // ตรวจสอบ email ซ้ำ
+    if (users.find(u => u.email === userData.email)) {
+      throw new Error('Email already exists');
+    }
 
-export const register = async (req, res) => {
-  const { password } = req.body;
+    // สร้าง user โดยไม่เก็บรหัสผ่าน (mock mode)
+    const newUser = {
+      id: Math.max(...users.map(u => u.id), 0) + 1,
+      name: userData.name,
+      email: userData.email,
+      role: 'user',
+      created_at: new Date().toISOString()
+    };
 
-  // สร้าง salt และแฮชรหัสผ่าน
-  const salt = await bcrypt.genSalt(10); // 10 rounds
-  const password_hash = await bcrypt.hash(password, salt);
+    users.push(newUser);
+    saveUsers(users);
 
-  // จัดเก็บเฉพาะ hash ไม่เก็บรหัสผ่านแบบธรรมดา
-  await createUser({ ...userData, password_hash });
-};
+    // เก็บเฉพาะ user data ไม่เก็บรหัสผ่าน
+    localStorage.setItem('currentUser', JSON.stringify(newUser));
+    return { user: newUser, token: 'mock-token-' + newUser.id };
+  },
 
-// การตรวจสอบรหัสผ่าน
-export const login = async (req, res) => {
-  const user = await getUserByEmail(req.body.email);
+  login: async (credentials) => {
+    const users = getStoredUsers();
+    const user = users.find(u => u.email === credentials.email);
+    
+    if (!user) {
+      throw new Error('Invalid email or password');
+    }
 
-  // เปรียบเทียบรหัสผ่านธรรมดากับ hash
-  const isValid = await bcrypt.compare(req.body.password, user.password_hash);
-
-  if (!isValid) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+    // ใน mock mode ไม่มีการตรวจสอบรหัสผ่านจริง
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    return { user, token: 'mock-token-' + user.id };
   }
-};
-
-// การสร้าง JWT Token
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: '7d' // Token หมดอายุหลัง 7 วัน
-  });
 };
 ```
 
 **มาตรการป้องกัน:**
-1. **การแฮชรหัสผ่านด้วย bcrypt:** ใช้ bcrypt มาตรฐานอุตสาหกรรมพร้อม salt rounds ที่เหมาะสม (10+)
-2. **JWT พร้อมการหมดอายุ:** Tokens หมดอายุอัตโนมัติหลัง 7 วัน
-3. **ตัวแปรสภาพแวดล้อม:** จัดเก็บ JWT_SECRET ในไฟล์ .env ไม่เคยอยู่ในโค้ด
-4. **การบังคับใช้ HTTPS:** ใช้ HTTPS ใน production เพื่อเข้ารหัสข้อมูลระหว่างการส่ง
-5. **ยกเว้นฟิลด์ที่ละเอียดอ่อน:** ไม่คืนค่า password_hash ใน API responses
-6. **การจัดเก็บ Token:** จัดเก็บ tokens อย่างปลอดภัย (httpOnly cookies หรือ secure localStorage)
+1. **ไม่เก็บรหัสผ่าน:** ใน mock mode ไม่เก็บรหัสผ่านใน localStorage เลย
+2. **การแยกข้อมูลตาม user:** จัดเก็บข้อมูลแยกตาม user_id เพื่อลดความเสี่ยง
+3. **การตรวจสอบความเป็นเจ้าของ:** ตรวจสอบ user_id ก่อนเข้าถึงข้อมูลทุกครั้ง
+4. **การ sanitize ข้อมูล:** ทำความสะอาด input ก่อนบันทึกลง localStorage
+5. **การจำกัดการเข้าถึง:** ใช้ Protected Routes เพื่อจำกัดการเข้าถึงหน้าที่ต้อง authentication
+6. **คำเตือนสำหรับ production:** ระบุชัดเจนว่านี่เป็น mock implementation และต้องใช้ backend จริงสำหรับ production
 
 ---
 
-### OWASP #3: A03:2021 – Injection (SQL Injection)
+### OWASP #3: A03:2021 – Injection (Cross-Site Scripting - XSS)
 
 #### เหตุใดจึงเป็นความเสี่ยงสำหรับแพลตฟอร์มของเรา
 
-SQL Injection เกิดขึ้นเมื่อข้อมูลที่ไม่น่าเชื่อถือถูกส่งไปยัง interpreter เป็นส่วนหนึ่งของคำสั่งหรือ query ในแพลตฟอร์มแชร์สูตรอาหารของเรา ข้อมูลป้อนเข้าของผู้ใช้ประกอบด้วย:
+Cross-Site Scripting (XSS) เกิดขึ้นเมื่อข้อมูลที่ไม่น่าเชื่อถือถูกแสดงผลในหน้าเว็บโดยไม่มีการ sanitize ในแพลตฟอร์ม frontend-only ของเรา ข้อมูลป้อนเข้าของผู้ใช้ประกอบด้วย:
 
 - **คำค้นหา:** ผู้ใช้ค้นหาสูตรตามคำสำคัญ
 - **เนื้อหาสูตร:** ชื่อ วัตถุดิบ ขั้นตอนมีข้อความของผู้ใช้
@@ -148,83 +168,80 @@ SQL Injection เกิดขึ้นเมื่อข้อมูลที่
 
 ```javascript
 // โค้ดที่มีช่องโหว่ (อย่าทำแบบนี้!)
-const searchQuery = req.query.search;
-const sql = `SELECT * FROM recipes WHERE title LIKE '%${searchQuery}%'`;
-// ถ้า searchQuery = "' OR '1'='1", นี่จะคืนค่าสูตรทั้งหมด
+const comment = userInput; // จาก localStorage
+<div dangerouslySetInnerHTML={{ __html: comment }} />
+// ถ้า comment = "<script>alert('XSS')</script>", นี่จะรัน JavaScript
 
-// ถ้า searchQuery = "'; DROP TABLE recipes; --"
-// นี่อาจลบตาราง recipes ทั้งหมด!
+// ถ้า comment = "<img src=x onerror='stealData()'>"
+// นี่อาจขโมยข้อมูลจาก localStorage!
 ```
 
 **ผลกระทบในโลกจริง:**
-- ผู้โจมตีเข้าถึงข้อมูลในฐานข้อมูลทั้งหมด
-- ข้อมูลที่ละเอียดอ่อน (อีเมล, password hashes) ถูกเปิดเผย
-- ข้อมูลสามารถถูกแก้ไขหรือลบได้
-- การบุกรุกระบบทั้งหมด
+- ผู้โจมตีสามารถขโมยข้อมูลจาก localStorage (user data, tokens)
+- ผู้โจมตีสามารถขโมย session หรือ authentication state
+- ผู้โจมตีสามารถแสดงเนื้อหาที่เป็นอันตรายให้ผู้ใช้เห็น
+- การบุกรุกระบบทั้งหมดผ่านการขโมยข้อมูล
 
 #### วิธีการบรรเทา
+
+**Mitigation method (สรุป):**
+
+- ใช้ React's built-in XSS protection (auto-escapes content โดย default) ทำความสะอาด (sanitize) input ทั้งหมดก่อนบันทึกลง localStorage โดยลบ HTML tags และ escape special characters ไม่ใช้ dangerouslySetInnerHTML ตรวจสอบและ sanitize image URLs ก่อนแสดงผล
 
 **การนำไปใช้ในแพลตฟอร์มของเรา:**
 
 ```javascript
-// config/database.js - Parameterized Queries
-export const query = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-};
+// services/recipeService.js - Sanitize Input
+export const recipeService = {
+  createRecipe: async (recipeData) => {
+    // Sanitize input ก่อนบันทึก
+    const sanitizedData = {
+      title: sanitizeInput(recipeData.title),
+      ingredients: sanitizeInput(recipeData.ingredients),
+      instructions: sanitizeInput(recipeData.instructions),
+      image_url: sanitizeURL(recipeData.image_url)
+    };
 
-// controllers/recipeController.js - การนำไปใช้ที่ปลอดภัย
-export const getAllRecipes = async (req, res) => {
-  const { search = '' } = req.query;
-
-  // ใช้ parameterized query พร้อม ? placeholders
-  let sql = `
-    SELECT * FROM recipes r
-    WHERE 1=1
-  `;
-
-  const params = [];
-
-  if (search) {
-    sql += ' AND (r.title LIKE ? OR r.ingredients LIKE ?)';
-    params.push(`%${search}%`, `%${search}%`);
+    // บันทึกลง localStorage
+    const recipes = getStoredRecipes();
+    recipes.push(sanitizedData);
+    saveRecipes(recipes);
   }
-
-  // พารามิเตอร์ถูก escape อย่างเหมาะสมโดย database driver
-  const recipes = await query(sql, params);
-  res.json(recipes);
 };
 
-// การตรวจสอบข้อมูลป้อนเข้าด้วย express-validator
-import { body } from 'express-validator';
+// utils/sanitize.js
+export const sanitizeInput = (input) => {
+  if (!input) return '';
+  
+  // ลบ HTML tags และ escape special characters
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim();
+};
 
-export const validateRecipe = [
-  body('title')
-    .trim()
-    .notEmpty()
-    .isLength({ min: 3, max: 200 })
-    .escape(), // Escapes HTML characters
-
-  body('ingredients')
-    .trim()
-    .notEmpty()
-    .isLength({ min: 10 }),
-
-  // มิดเดิลแวร์การตรวจสอบตรวจสอบข้อผิดพลาด
-];
+// components/RecipeCard.jsx - Safe Rendering
+const RecipeCard = ({ recipe }) => {
+  // React auto-escapes โดย default
+  return (
+    <div>
+      <h3>{recipe.title}</h3> {/* Safe - React escapes automatically */}
+      <p>{recipe.ingredients}</p> {/* Safe */}
+      {/* หลีกเลี่ยง dangerouslySetInnerHTML */}
+    </div>
+  );
+};
 ```
 
 **มาตรการป้องกัน:**
-1. **Parameterized Queries:** ใช้ ? placeholders เสมอ ไม่ใช้การต่อสตริง
-2. **การตรวจสอบข้อมูลป้อนเข้า:** ใช้ express-validator เพื่อทำความสะอาดข้อมูลป้อนเข้าทั้งหมด
-3. **ORM/Query Builder:** ไลบรารี SQLite3 escape พารามิเตอร์อัตโนมัติ
-4. **สิทธิ์ขั้นต่ำ:** ผู้ใช้ฐานข้อมูลมีเฉพาะสิทธิ์ที่จำเป็น (ไม่ใช่ admin)
-5. **การทำความสะอาดข้อมูลป้อนเข้า:** Trim, escape HTML และตรวจสอบประเภทข้อมูล
-6. **การจัดการข้อผิดพลาด:** ไม่เปิดเผยข้อผิดพลาด SQL ดิบให้ผู้ใช้
+1. **React's Built-in XSS Protection:** React auto-escapes content โดย default
+2. **หลีกเลี่ยง dangerouslySetInnerHTML:** ไม่ใช้ dangerouslySetInnerHTML เว้นแต่จำเป็นจริงๆ
+3. **การ sanitize ข้อมูลป้อนเข้า:** ทำความสะอาด input ก่อนบันทึกลง localStorage
+4. **การตรวจสอบ URL:** ตรวจสอบ image_url ก่อนแสดงผล
+5. **Content Security Policy (CSP):** ใช้ CSP headers ใน production
+6. **การจัดการข้อผิดพลาด:** ไม่แสดง error messages ที่มี user input โดยตรง
 
 ---
 
@@ -236,12 +253,11 @@ export const validateRecipe = [
 
 | ประเภทข้อมูล | วัตถุประสงค์ | ฐานทางกฎหมาย | ระยะเวลาเก็บรักษา |
 |------------|-----------|-------------|------------------|
-| ชื่อ | การระบุตัวตนผู้ใช้, การระบุผู้เขียนสูตร | ความยินยอม | ตลอดอายุบัญชี |
-| ที่อยู่อีเมล | การยืนยันตัวตน, การสื่อสาร | ความยินยอม | ตลอดอายุบัญชี |
-| รหัสผ่าน (ที่แฮชแล้ว) | การยืนยันตัวตน | ความยินยอม | ตลอดอายุบัญชี |
-| IP Address (logs) | ความปลอดภัย, การป้องกันการใช้ในทางที่ผิด | ประโยชน์อันชอบธรรม | 90 วัน |
-| เนื้อหาสูตร | การให้บริการ | ความยินยอม | จนกว่าผู้ใช้ลบ |
-| ความคิดเห็นการให้คะแนน | การให้บริการ | ความยินยอม | จนกว่าผู้ใช้ลบ |
+| ชื่อ | การระบุตัวตนผู้ใช้, การระบุผู้เขียนสูตร | ความยินยอม | ตลอดอายุบัญชี (ใน localStorage) |
+| ที่อยู่อีเมล | การยืนยันตัวตน, การสื่อสาร | ความยินยอม | ตลอดอายุบัญชี (ใน localStorage) |
+| รหัสผ่าน | การยืนยันตัวตน (mock mode - ไม่เก็บจริง) | ความยินยอม | ไม่เก็บ (mock authentication) |
+| เนื้อหาสูตร | การให้บริการ | ความยินยอม | จนกว่าผู้ใช้ลบ (ใน localStorage) |
+| ความคิดเห็นการให้คะแนน | การให้บริการ | ความยินยอม | จนกว่าผู้ใช้ลบ (ใน localStorage) |
 
 ---
 
@@ -270,12 +286,12 @@ export const validateRecipe = [
 │                    การประมวลผลข้อมูล                         │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  เซิร์ฟเวอร์ Backend (Node.js + Express)                    │
-│  ├─ การตรวจสอบข้อมูลป้อนเข้า (express-validator)            │
-│  ├─ การทำให้อีเมลเป็นมาตรฐาน                                │
-│  ├─ การแฮชรหัสผ่าน (bcrypt, salt rounds: 10)               │
-│  ├─ การสร้าง JWT token                                     │
-│  └─ การตรวจสอบการควบคุมการเข้าถึง                           │
+│  Frontend Application (React.js)                            │
+│  ├─ การตรวจสอบข้อมูลป้อนเข้า (client-side validation)      │
+│  ├─ การทำให้อีเมลเป็นมาตรฐาน (toLowerCase)                 │
+│  ├─ การ sanitize ข้อมูล (ป้องกัน XSS)                      │
+│  ├─ การสร้าง mock token (สำหรับ authentication)            │
+│  └─ การตรวจสอบการควบคุมการเข้าถึง (Protected Routes)         │
 │                                                             │
 │  หลักการประมวลผล:                                           │
 │  ✓ การจำกัดวัตถุประสงค์: เฉพาะวัตถุประสงค์ที่ระบุเท่านั้น   │
@@ -290,26 +306,29 @@ export const validateRecipe = [
 │                      การจัดเก็บข้อมูล                        │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  ฐานข้อมูล SQLite (การจัดเก็บไฟล์ในเครื่อง)                 │
-│  ├─ ตาราง users                                            │
+│  Browser localStorage (การจัดเก็บในเบราว์เซอร์)              │
+│  ├─ users (JSON array)                                     │
 │  │  ├─ id, name, email                                    │
-│  │  ├─ password_hash (ไม่ใช่รหัสผ่านธรรมดา)                │
 │  │  ├─ role, created_at                                  │
-│  │  └─ ฟิลด์ที่เข้ารหัสสำหรับข้อมูลที่ละเอียดอ่อน           │
-│  ├─ ตาราง recipes                                         │
-│  │  └─ user_id (foreign key), title, content            │
-│  └─ ตาราง ratings                                         │
-│     └─ user_id, recipe_id, rating, comment               │
+│  │  └─ ไม่เก็บรหัสผ่าน (mock authentication)              │
+│  ├─ recipes (JSON array)                                  │
+│  │  └─ user_id, title, ingredients, instructions         │
+│  ├─ ratings (JSON array)                                  │
+│  │  └─ user_id, recipe_id, rating, comment               │
+│  └─ currentUser (JSON object)                             │
+│     └─ ข้อมูลผู้ใช้ที่ล็อกอินอยู่                            │
 │                                                             │
 │  มาตรการความปลอดภัย:                                        │
-│  ✓ สิทธิ์ไฟล์ฐานข้อมูล (จำกัดการอ่าน/เขียน)                 │
-│  ✓ ไม่มีการจัดเก็บรหัสผ่านแบบข้อความธรรมดา                  │
-│  ✓ ข้อจำกัด Foreign key สำหรับความสมบูรณ์ของข้อมูล         │
-│  ✓ สำรองข้อมูลเป็นประจำ (เข้ารหัส)                          │
-│  ✓ Access logs สำหรับการตรวจสอบ                            │
+│  ✓ ไม่เก็บรหัสผ่าน (mock mode)                             │
+│  ✓ การ sanitize ข้อมูลก่อนบันทึก                           │
+│  ✓ การตรวจสอบความเป็นเจ้าของก่อนแก้ไข/ลบ                    │
+│  ✓ ข้อจำกัด localStorage (ประมาณ 5-10MB)                   │
+│  ✓ การแยกข้อมูลตาม user_id                                 │
 │                                                             │
-│  ที่ตั้ง: เซิร์ฟเวอร์ในประเทศไทย (ปฏิบัติตาม PDPA)          │
-│  การเข้าถึง: เฉพาะกระบวนการ backend ที่ได้รับอนุญาต          │
+│  ที่ตั้ง: Browser ของผู้ใช้ (client-side)                  │
+│  การเข้าถึง: ผ่าน JavaScript API เท่านั้น                   │
+│  หมายเหตุ: นี่เป็น mock implementation สำหรับ development │
+│            ต้องใช้ backend + database จริงสำหรับ production │
 │                                                             │
 └──────────────────┬──────────────────────────────────────────┘
                    │
@@ -354,22 +373,23 @@ export const validateRecipe = [
 - นโยบายความเป็นส่วนตัวอธิบายการใช้ข้อมูลอย่างชัดเจน
 
 #### **การประมวลผลข้อมูล**
-- รหัสผ่านถูกแฮชด้วย bcrypt ทันที (10 salt rounds) ก่อนการจัดเก็บ
+- ไม่เก็บรหัสผ่าน (mock authentication mode)
 - ที่อยู่อีเมลทำให้เป็นมาตรฐานเป็นตัวพิมพ์เล็กเพื่อความสม่ำเสมอ
 - ดำเนินการตรวจสอบข้อมูลป้อนเข้าบนฟิลด์ทั้งหมด (ความยาว รูปแบบ ประเภท)
-- สร้าง JWT tokens สำหรับการยืนยันตัวตน (หมดอายุ 7 วัน)
-- ดำเนินการตรวจสอบการควบคุมการเข้าถึงบนทุก protected endpoint
+- สร้าง mock tokens สำหรับการยืนยันตัวตน (สำหรับ development)
+- ดำเนินการตรวจสอบการควบคุมการเข้าถึงผ่าน Protected Routes
 - ตรวจสอบความเป็นเจ้าของของผู้ใช้ก่อนการแก้ไขข้อมูลใดๆ
+- Sanitize ข้อมูลก่อนบันทึกลง localStorage เพื่อป้องกัน XSS
 
 #### **การจัดเก็บข้อมูล**
-- จัดเก็บข้อมูลทั้งหมดในฐานข้อมูล SQLite บนเซิร์ฟเวอร์
-- จัดเก็บ password hashes (ไม่เคยเก็บรหัสผ่านแบบข้อความธรรมดา)
-- ไฟล์ฐานข้อมูลมีสิทธิ์การอ่าน/เขียนที่จำกัด (ระดับ OS)
-- ข้อจำกัด Foreign key รับประกันความสมบูรณ์ของข้อมูล
-- ข้อจำกัด UNIQUE ป้องกันรายการซ้ำ (เช่น อีเมล, การให้คะแนนสูตร-ผู้ใช้)
-- เซิร์ฟเวอร์ตั้งอยู่ในประเทศไทยเพื่อการปฏิบัติตาม PDPA
-- ดำเนินการสำรองข้อมูลที่เข้ารหัสเป็นประจำ
-- รักษา Access logs สำหรับร่องรอยการตรวจสอบ (เก็บ 90 วัน)
+- จัดเก็บข้อมูลทั้งหมดใน browser localStorage (client-side)
+- ไม่เก็บรหัสผ่าน (mock authentication ไม่ต้องการรหัสผ่านจริง)
+- ข้อมูลถูกจัดเก็บในรูปแบบ JSON ใน localStorage
+- การตรวจสอบ duplicate ผ่าน client-side validation
+- ข้อมูลถูกจัดเก็บใน browser ของผู้ใช้ (client-side storage)
+- ข้อจำกัด localStorage (ประมาณ 5-10MB ต่อ domain)
+- หมายเหตุ: นี่เป็น mock implementation สำหรับ development
+- สำหรับ production ต้องใช้ backend + database จริงเพื่อความปลอดภัย
 
 #### **การแชร์ข้อมูล**
 - **ข้อมูลสาธารณะ:** เนื้อหาสูตร ชื่อแสดงผู้ใช้ คะแนน/ความคิดเห็น มองเห็นได้สำหรับผู้ใช้ทุกคน
@@ -385,191 +405,251 @@ export const validateRecipe = [
 ### ✅ 1. การตรวจสอบข้อมูลป้อนเข้าบนฟอร์มทั้งหมด
 
 **การนำไปใช้:**
-- ใช้มิดเดิลแวร์ `express-validator` บนทุก API endpoints
+- ใช้ client-side validation บนทุกฟอร์ม
 - ตรวจสอบประเภทข้อมูล ความยาว และรูปแบบ
-- ทำความสะอาดข้อมูลป้อนเข้าเพื่อลบ HTML/JavaScript
-- ปฏิเสธ requests ที่มีข้อผิดพลาดในการตรวจสอบ
+- ทำความสะอาดข้อมูลป้อนเข้าเพื่อลบ HTML/JavaScript (sanitize)
+- ปฏิเสธการบันทึกข้อมูลที่มีข้อผิดพลาดในการตรวจสอบ
 
 **ตัวอย่างโค้ด:**
 ```javascript
-export const validateRecipe = [
-  body('title').trim().notEmpty().isLength({ min: 3, max: 200 }),
-  body('ingredients').trim().notEmpty().isLength({ min: 10 }),
-  body('instructions').trim().notEmpty().isLength({ min: 20 }),
-  body('image_url').optional().isURL(),
-  validate // มิดเดิลแวร์ที่ตรวจสอบข้อผิดพลาด
-];
-```
-
-**ป้องกันจาก:**
-- SQL Injection
-- Cross-Site Scripting (XSS)
-- การโจมตีแบบ Buffer overflow
-- ปัญหาความสมบูรณ์ของข้อมูล
-
----
-
-### ✅ 2. การแฮชรหัสผ่าน (bcrypt)
-
-**การนำไปใช้:**
-- ใช้ไลบรารี bcryptjs พร้อม 10+ salt rounds
-- ไม่จัดเก็บรหัสผ่านแบบข้อความธรรมดา
-- แฮชรหัสผ่านก่อนการใส่ลงฐานข้อมูล
-- ใช้การเปรียบเทียบที่ปลอดภัย (bcrypt.compare) สำหรับการเข้าสู่ระบบ
-
-**ตัวอย่างโค้ด:**
-```javascript
-// การลงทะเบียน
-const salt = await bcrypt.genSalt(10);
-const password_hash = await bcrypt.hash(password, salt);
-
-// การตรวจสอบการเข้าสู่ระบบ
-const isValid = await bcrypt.compare(inputPassword, user.password_hash);
-```
-
-**ป้องกันจาก:**
-- การละเมิดฐานข้อมูลรหัสผ่าน
-- การโจมตีแบบ Rainbow table
-- การโจมตีแบบ Brute force (การแฮชช้า)
-- การโจมตีแบบ Dictionary
-
----
-
-### ✅ 3. Rate Limiting บน API Endpoints
-
-**การนำไปใช้:**
-- จำกัดจำนวน requests ต่อ IP address
-- ใช้ exponential backoff สำหรับความพยายามเข้าสู่ระบบที่ล้มเหลว
-- ป้องกันการสร้างสูตร/การให้คะแนนแบบสแปม
-
-**การกำหนดค่าที่แนะนำ:**
-```javascript
-import rateLimit from 'express-rate-limit';
-
-// การจำกัดอัตรา API ทั่วไป
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 นาที
-  max: 100, // 100 requests ต่อ window
-  message: 'Too many requests, please try again later'
-});
-
-// การจำกัดอัตราที่เข้มงวดสำหรับ auth endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5, // 5 attempts ต่อ window
-  message: 'Too many login attempts, please try again later'
-});
-
-app.use('/api/', apiLimiter);
-app.use('/api/auth/', authLimiter);
-```
-
-**ป้องกันจาก:**
-- การโจมตีแบบ Brute force
-- การโจมตีแบบ DDoS
-- การสร้างเนื้อหาแบบสแปม
-- การใช้ API ในทางที่ผิด
-
----
-
-### ✅ 4. การเข้ารหัส HTTPS (Production)
-
-**การนำไปใช้:**
-- ใช้ Let's Encrypt สำหรับ SSL certificates ฟรี
-- บังคับใช้การ redirect HTTPS จาก HTTP
-- ตั้งค่า secure headers (HSTS, CSP)
-- ใช้ secure cookies พร้อม httpOnly และ secure flags
-
-**การกำหนดค่า:**
-```javascript
-// ใน production
-if (process.env.NODE_ENV === 'production') {
-  // บังคับใช้ HTTPS
-  app.use((req, res, next) => {
-    if (req.header('x-forwarded-proto') !== 'https') {
-      res.redirect(`https://${req.header('host')}${req.url}`);
-    } else {
-      next();
-    }
-  });
-
-  // Security headers
-  app.use(helmet({
-    hsts: { maxAge: 31536000, includeSubDomains: true },
-    contentSecurityPolicy: { directives: { defaultSrc: ["'self'"] } }
-  }));
-}
-```
-
-**ป้องกันจาก:**
-- การโจมตีแบบ Man-in-the-middle
-- การดักฟัง Packet
-- การขโมย Session
-- การขโมย Cookie
-
----
-
-### ✅ 5. Access Logs สำหรับร่องรอยการตรวจสอบ
-
-**การนำไปใช้:**
-- บันทึก API requests ทั้งหมดพร้อม timestamp
-- บันทึกการกระทำของผู้ใช้ (สร้าง อัปเดต ลบ)
-- ติดตามความพยายามการยืนยันตัวตนที่ล้มเหลว
-- จัดเก็บ logs อย่างปลอดภัยเพื่อการปฏิบัติตาม PDPA
-
-**ตัวอย่างโค้ด:**
-```javascript
-import morgan from 'morgan';
-import fs from 'fs';
-import path from 'path';
-
-// สร้าง write stream สำหรับ access logs
-const accessLogStream = fs.createWriteStream(
-  path.join(__dirname, 'logs', 'access.log'),
-  { flags: 'a' }
-);
-
-// รูปแบบ log: timestamp, IP, method, URL, status, user
-morgan.token('user', (req) => req.user?.email || 'anonymous');
-
-app.use(morgan(
-  ':date[iso] :remote-addr :method :url :status :user',
-  { stream: accessLogStream }
-));
-
-// การบันทึกการตรวจสอบแบบกำหนดเองสำหรับการดำเนินการที่ละเอียดอ่อน
-export const auditLog = (action, userId, details) => {
-  const logEntry = {
-    timestamp: new Date().toISOString(),
-    action,
-    userId,
-    details
-  };
-  fs.appendFileSync('logs/audit.log', JSON.stringify(logEntry) + '\n');
+// components/RecipeForm.jsx
+const validateRecipe = (data) => {
+  const errors = {};
+  
+  if (!data.title || data.title.trim().length < 3) {
+    errors.title = 'Title must be at least 3 characters';
+  }
+  
+  if (!data.ingredients || data.ingredients.trim().length < 10) {
+    errors.ingredients = 'Ingredients must be at least 10 characters';
+  }
+  
+  if (data.image_url && !isValidURL(data.image_url)) {
+    errors.image_url = 'Invalid URL format';
+  }
+  
+  return errors;
 };
 
-// การใช้งาน
-await deleteRecipe(recipeId);
-auditLog('DELETE_RECIPE', req.user.id, { recipeId });
+// utils/sanitize.js
+export const sanitizeInput = (input) => {
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .trim();
+};
+```
+
+**ป้องกันจาก:**
+- Cross-Site Scripting (XSS)
+- การโจมตีแบบ Injection
+- ปัญหาความสมบูรณ์ของข้อมูล
+- ข้อมูลที่ไม่ถูกต้อง
+
+---
+
+### ✅ 2. การจัดการ Authentication (Mock Mode)
+
+**การนำไปใช้:**
+- ไม่เก็บรหัสผ่านใน localStorage (mock authentication)
+- ใช้ mock tokens สำหรับการยืนยันตัวตน
+- ตรวจสอบ user ID จาก localStorage ก่อนการดำเนินการ
+- ใช้ Protected Routes เพื่อจำกัดการเข้าถึง
+
+**ตัวอย่างโค้ด:**
+```javascript
+// services/authService.js
+export const authService = {
+  register: async (userData) => {
+    // ไม่เก็บรหัสผ่าน - mock mode
+    const newUser = {
+      id: generateId(),
+      name: userData.name,
+      email: userData.email.toLowerCase(),
+      role: 'user',
+      created_at: new Date().toISOString()
+    };
+    
+    const users = getStoredUsers();
+    users.push(newUser);
+    saveUsers(users);
+    
+    localStorage.setItem('currentUser', JSON.stringify(newUser));
+    return { user: newUser, token: 'mock-token-' + newUser.id };
+  }
+};
+```
+
+**ป้องกันจาก:**
+- การเข้าถึงข้อมูลโดยไม่ได้รับอนุญาต
+- การแก้ไขข้อมูลผู้อื่น
+- การข้ามการตรวจสอบ authentication
+- หมายเหตุ: นี่เป็น mock implementation - ต้องใช้ backend จริงสำหรับ production
+
+---
+
+### ✅ 3. การป้องกัน XSS (Cross-Site Scripting)
+
+**การนำไปใช้:**
+- ใช้ React's built-in XSS protection (auto-escaping)
+- Sanitize ข้อมูลก่อนบันทึกลง localStorage
+- หลีกเลี่ยง dangerouslySetInnerHTML
+- ตรวจสอบและ sanitize URLs ก่อนแสดงผล
+
+**การนำไปใช้:**
+```javascript
+// utils/sanitize.js
+export const sanitizeInput = (input) => {
+  if (!input) return '';
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim();
+};
+
+// components/RecipeCard.jsx
+const RecipeCard = ({ recipe }) => {
+  // React auto-escapes โดย default
+  return (
+    <div>
+      <h3>{recipe.title}</h3> {/* Safe */}
+      <p>{recipe.ingredients}</p> {/* Safe */}
+      {/* หลีกเลี่ยง dangerouslySetInnerHTML */}
+    </div>
+  );
+};
+```
+
+**ป้องกันจาก:**
+- Cross-Site Scripting (XSS) attacks
+- การขโมยข้อมูลจาก localStorage
+- การขโมย session/authentication state
+- การแสดงเนื้อหาที่เป็นอันตราย
+
+---
+
+### ✅ 4. การตรวจสอบความเป็นเจ้าของ (Ownership Verification)
+
+**การนำไปใช้:**
+- ตรวจสอบ user_id จาก localStorage ก่อนการแก้ไข/ลบ
+- ใช้ Protected Routes เพื่อจำกัดการเข้าถึง
+- ตรวจสอบ authentication state ก่อนแสดงปุ่ม Edit/Delete
+- ป้องกันการแก้ไขข้อมูลผู้อื่น
+
+**การนำไปใช้:**
+```javascript
+// services/recipeService.js
+export const updateRecipe = async (id, recipeData) => {
+  const recipes = getStoredRecipes();
+  const recipe = recipes.find(r => r.id === parseInt(id));
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+  // ตรวจสอบความเป็นเจ้าของ
+  if (!currentUser || recipe.user_id !== currentUser.id) {
+    throw new Error('Not authorized to update this recipe');
+  }
+
+  // ดำเนินการอัปเดต
+  const index = recipes.findIndex(r => r.id === parseInt(id));
+  recipes[index] = { ...recipes[index], ...recipeData };
+  saveRecipes(recipes);
+  return recipes[index];
+};
+
+// components/RecipeDetailPage.jsx
+const RecipeDetailPage = () => {
+  const { user } = useAuth();
+  const isOwner = recipe.user_id === user?.id;
+  
+  return (
+    <div>
+      {isOwner && (
+        <button onClick={handleEdit}>Edit</button>
+      )}
+    </div>
+  );
+};
+```
+
+**ป้องกันจาก:**
+- การแก้ไขข้อมูลโดยไม่ได้รับอนุญาต
+- การลบข้อมูลผู้อื่น
+- การเข้าถึงข้อมูลที่ไม่ได้รับอนุญาต
+- Broken Access Control
+
+---
+
+### ✅ 5. การจัดการ localStorage อย่างปลอดภัย
+
+**การนำไปใช้:**
+- จำกัดข้อมูลที่จัดเก็บใน localStorage
+- แยกข้อมูลตาม user_id เพื่อลดความเสี่ยง
+- ตรวจสอบข้อมูลก่อนอ่านจาก localStorage
+- จัดการข้อผิดพลาดเมื่อ localStorage เต็ม
+
+**ตัวอย่างโค้ด:**
+```javascript
+// utils/storage.js
+export const saveToLocalStorage = (key, data) => {
+  try {
+    const jsonData = JSON.stringify(data);
+    
+    // ตรวจสอบขนาดข้อมูล
+    if (jsonData.length > 5 * 1024 * 1024) { // 5MB
+      throw new Error('Data too large for localStorage');
+    }
+    
+    localStorage.setItem(key, jsonData);
+  } catch (error) {
+    if (error.name === 'QuotaExceededError') {
+      // localStorage เต็ม - ลบข้อมูลเก่า
+      clearOldData();
+      localStorage.setItem(key, jsonData);
+    } else {
+      throw error;
+    }
+  }
+};
+
+export const getFromLocalStorage = (key) => {
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error('Error reading from localStorage:', error);
+    return null;
+  }
+};
+
+// ลบข้อมูลเก่าที่ไม่ใช้งาน
+const clearOldData = () => {
+  // ลบข้อมูลที่เก่ากว่า 30 วัน
+  const recipes = getFromLocalStorage('recipes') || [];
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const filtered = recipes.filter(r => 
+    new Date(r.created_at) > thirtyDaysAgo
+  );
+  
+  saveToLocalStorage('recipes', filtered);
+};
 ```
 
 **ประโยชน์:**
-- การปฏิบัติตาม PDPA (บันทึกการประมวลผลข้อมูล)
-- การสอบสวนเหตุการณ์ความปลอดภัย
-- การติดตามกิจกรรมของผู้ใช้
-- การตรวจสอบการปฏิบัติตาม
-- ระบุรูปแบบที่ผิดปกติ
-
-**การเก็บรักษา Log:**
-- Access logs: 90 วัน
-- Audit logs: 1 ปี
-- Security logs: 2 ปี
+- ป้องกัน localStorage overflow
+- จัดการข้อผิดพลาดอย่างเหมาะสม
+- รักษาประสิทธิภาพของแอปพลิเคชัน
+- ลดความเสี่ยงการสูญเสียข้อมูล
+- หมายเหตุ: สำหรับ production ควรใช้ backend + database จริง
 
 ---
 
 ## สรุป
 
-แพลตฟอร์มแชร์สูตรอาหารนี้นำมาตรการความปลอดภัยที่ครอบคลุมซึ่งสอดคล้องกับแนวทาง OWASP Top 10 และการปฏิบัติตาม PDPA อย่างเต็มที่ ช่องโหว่สำคัญสามประการที่จัดการคือ Broken Access Control, Cryptographic Failures และ SQL Injection โดยแต่ละรายการมีกลยุทธ์การบรรเทาที่แข็งแกร่ง กระแสข้อมูลของแพลตฟอร์มเคารพความเป็นส่วนตัวของผู้ใช้ผ่านการเก็บรวบรวมที่โปร่งใส การประมวลผลที่ปลอดภัย การจัดเก็บที่เข้ารหัส และการไม่แชร์กับบุคคลที่สาม รายการตรวจสอบความปลอดภัยรับประกันการป้องกันแบบหลายชั้นตั้งแต่การตรวจสอบข้อมูลป้อนเข้าไปจนถึงการบันทึกการตรวจสอบ
+แพลตฟอร์มแชร์สูตรอาหารนี้นำมาตรการความปลอดภัยที่ครอบคลุมซึ่งสอดคล้องกับแนวทาง OWASP Top 10 และการปฏิบัติตาม PDPA อย่างเต็มที่ ช่องโหว่สำคัญสามประการที่จัดการคือ Broken Access Control, Cryptographic Failures (ในบริบทของ frontend) และ Cross-Site Scripting (XSS) โดยแต่ละรายการมีกลยุทธ์การบรรเทาที่แข็งแกร่ง กระแสข้อมูลของแพลตฟอร์มเคารพความเป็นส่วนตัวของผู้ใช้ผ่านการเก็บรวบรวมที่โปร่งใส การประมวลผลที่ปลอดภัย การจัดเก็บใน localStorage และการไม่แชร์กับบุคคลที่สาม รายการตรวจสอบความปลอดภัยรับประกันการป้องกันแบบหลายชั้นตั้งแต่การตรวจสอบข้อมูลป้อนเข้าไปจนถึงการจัดการ localStorage อย่างปลอดภัย หมายเหตุ: นี่เป็น mock implementation สำหรับ development - สำหรับ production ต้องใช้ backend API และ database จริงเพื่อความปลอดภัยที่เหมาะสม
 
 ---
 

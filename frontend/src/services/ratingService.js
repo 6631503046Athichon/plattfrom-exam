@@ -1,20 +1,16 @@
 import { mockRatings } from '../data/mockData';
 
-// Simulate async delay
 const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Get all ratings from localStorage or use default mock data
 const getStoredRatings = () => {
   const stored = localStorage.getItem('ratings');
   return stored ? JSON.parse(stored) : [...mockRatings];
 };
 
-// Save ratings to localStorage
 const saveRatings = (ratings) => {
   localStorage.setItem('ratings', JSON.stringify(ratings));
 };
 
-// Update recipe's average rating
 const updateRecipeRating = (recipeId) => {
   const recipes = JSON.parse(localStorage.getItem('recipes') || '[]');
   const ratings = getStoredRatings();
@@ -44,7 +40,6 @@ export const ratingService = {
     const ratings = getStoredRatings();
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
-    // Check if user already rated this recipe
     const existingRating = ratings.find(
       r => r.recipe_id === parseInt(recipeId) && r.user_id === currentUser.id
     );
