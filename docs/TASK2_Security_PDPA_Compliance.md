@@ -1,33 +1,33 @@
-# Task 2 — Security & PDPA Compliance (OWASP + Privacy-by-Design) (20 points)
+# Task 2 — ความปลอดภัยและการปฏิบัติตาม PDPA (OWASP + Privacy-by-Design) (20 คะแนน)
 
-**Student:** Mr. Athichon Kaewla
-**Student ID:** 66315030406
-**Course:** 1305308 Platform Development
-**Project:** Recipe Sharing Platform with Ratings
+**นักศึกษา:** นายอธิชนม์ แก้วหล้า
+**รหัสนักศึกษา:** 66315030406
+**รายวิชา:** 1305308 การพัฒนาแพลตฟอร์ม
+**โปรเจค:** แพลตฟอร์มแชร์สูตรอาหารพร้อมระบบให้คะแนน
 
 ---
 
-## 1. Three OWASP Top 10 Items Relevant to This Project
+## 1. สามรายการจาก OWASP Top 10 ที่เกี่ยวข้องกับโปรเจคนี้
 
-### OWASP #1: A01:2021 – Broken Access Control
+### OWASP #1: A01:2021 – Broken Access Control (การควบคุมการเข้าถึงที่เสียหาย)
 
-#### Why This is a Risk for Our Platform
+#### เหตุใดจึงเป็นความเสี่ยงสำหรับแพลตฟอร์มของเรา
 
-Broken Access Control occurs when users can act outside of their intended permissions. In our Recipe Sharing Platform, several scenarios could expose this vulnerability:
+Broken Access Control เกิดขึ้นเมื่อผู้ใช้สามารถกระทำการนอกเหนือจากสิทธิ์ที่ตั้งใจไว้ ในแพลตฟอร์มแชร์สูตรอาหารของเรา มีหลายสถานการณ์ที่อาจเผยให้เห็นช่องโหว่นี้:
 
-- **Unauthorized Recipe Modification:** A malicious user could attempt to modify or delete recipes created by other users by directly calling API endpoints with different recipe IDs
-- **Rating Manipulation:** Users could try to rate the same recipe multiple times by manipulating API requests
-- **Admin Function Access:** Regular users might attempt to access admin-only functions if not properly protected
-- **Profile Data Exposure:** Users could access other users' private data (email, password hash) through API manipulation
+- **การแก้ไขสูตรโดยไม่ได้รับอนุญาต:** ผู้ใช้ที่เป็นอันตรายอาจพยายามแก้ไขหรือลบสูตรอาหารที่สร้างโดยผู้ใช้อื่นโดยเรียก API endpoints โดยตรงด้วย recipe IDs ที่แตกต่างกัน
+- **การจัดการคะแนน:** ผู้ใช้อาจพยายามให้คะแนนสูตรเดียวกันหลายครั้งโดยการปรับแต่ง API requests
+- **การเข้าถึงฟังก์ชันผู้ดูแลระบบ:** ผู้ใช้ทั่วไปอาจพยายามเข้าถึงฟังก์ชันที่เฉพาะผู้ดูแลหากไม่ได้รับการป้องกันอย่างเหมาะสม
+- **การเปิดเผยข้อมูลโปรไฟล์:** ผู้ใช้อาจเข้าถึงข้อมูลส่วนตัวของผู้ใช้อื่น (อีเมล, password hash) ผ่านการปรับแต่ง API
 
-**Real-World Impact:**
-- User A creates a popular recipe
-- User B modifies the recipe ID in an API request and deletes User A's recipe
-- Platform loses trust and valuable content
+**ผลกระทบในโลกจริง:**
+- ผู้ใช้ A สร้างสูตรที่ได้รับความนิยม
+- ผู้ใช้ B แก้ไข recipe ID ใน API request และลบสูตรของผู้ใช้ A
+- แพลตฟอร์มสูญเสียความไว้วางใจและเนื้อหาที่มีคุณค่า
 
-#### Mitigation Method
+#### วิธีการบรรเทา
 
-**Implementation in Our Platform:**
+**การนำไปใช้ในแพลตฟอร์มของเรา:**
 
 ```javascript
 // middleware/auth.js
@@ -44,70 +44,70 @@ export const authenticateToken = async (req, res, next) => {
 export const updateRecipe = async (req, res) => {
   const recipe = await getRecipeById(req.params.id);
 
-  // Check ownership before allowing update
+  // ตรวจสอบความเป็นเจ้าของก่อนอนุญาตให้อัปเดต
   if (recipe.user_id !== req.user.id && req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Not authorized' });
   }
 
-  // Proceed with update
+  // ดำเนินการอัปเดต
 };
 ```
 
-**Protection Measures:**
-1. **JWT Authentication:** Require valid tokens for protected endpoints
-2. **Ownership Verification:** Check user ownership before edit/delete operations
-3. **Role-Based Access Control (RBAC):** Implement user and admin roles
-4. **Database Constraints:** Unique constraint on (recipe_id, user_id) in ratings table prevents duplicate ratings
+**มาตรการป้องกัน:**
+1. **การยืนยันตัวตนด้วย JWT:** ต้องการ tokens ที่ถูกต้องสำหรับ protected endpoints
+2. **การตรวจสอบความเป็นเจ้าของ:** ตรวจสอบความเป็นเจ้าของของผู้ใช้ก่อนการดำเนินการแก้ไข/ลบ
+3. **การควบคุมการเข้าถึงตามบทบาท (RBAC):** ใช้บทบาทผู้ใช้และผู้ดูแลระบบ
+4. **ข้อจำกัดของฐานข้อมูล:** ข้อจำกัด UNIQUE บน (recipe_id, user_id) ในตาราง ratings ป้องกันการให้คะแนนซ้ำ
 
 ---
 
-### OWASP #2: A02:2021 – Cryptographic Failures
+### OWASP #2: A02:2021 – Cryptographic Failures (ความล้มเหลวด้านการเข้ารหัส)
 
-#### Why This is a Risk for Our Platform
+#### เหตุใดจึงเป็นความเสี่ยงสำหรับแพลตฟอร์มของเรา
 
-Cryptographic Failures (previously known as Sensitive Data Exposure) occur when sensitive data is not properly protected. In our platform, we handle:
+Cryptographic Failures (เดิมเรียกว่า Sensitive Data Exposure) เกิดขึ้นเมื่อข้อมูลที่ละเอียดอ่อนไม่ได้รับการป้องกันอย่างเหมาะสม ในแพลตฟอร์มของเรา เราจัดการกับ:
 
-- **User Passwords:** The most critical sensitive data
-- **JWT Tokens:** Authentication credentials
-- **Email Addresses:** Personal identifiable information (PII)
-- **User Comments:** May contain personal information
+- **รหัสผ่านผู้ใช้:** ข้อมูลที่ละเอียดอ่อนที่สำคัญที่สุด
+- **JWT Tokens:** ข้อมูลประจำตัวสำหรับการยืนยันตัวตน
+- **ที่อยู่อีเมล:** ข้อมูลส่วนบุคคลที่สามารถระบุตัวตนได้ (PII)
+- **ความคิดเห็นของผู้ใช้:** อาจมีข้อมูลส่วนตัว
 
-**Real-World Impact:**
-- Database breach exposes plain-text passwords
-- Attacker gains access to all user accounts
-- Users who reuse passwords across sites are compromised on multiple platforms
-- Legal liability under PDPA for data breach
+**ผลกระทบในโลกจริง:**
+- การละเมิดฐานข้อมูลเผยรหัสผ่านแบบข้อความธรรมดา
+- ผู้โจมตีเข้าถึงบัญชีผู้ใช้ทั้งหมด
+- ผู้ใช้ที่ใช้รหัสผ่านซ้ำกันในหลายเว็บไซต์ถูกบุกรุกในหลายแพลตฟอร์ม
+- ความรับผิดทางกฎหมายภายใต้ PDPA สำหรับการละเมิดข้อมูล
 
-**What Could Go Wrong:**
-- Storing passwords in plain text or using weak hashing (MD5, SHA1)
-- Transmitting sensitive data over HTTP instead of HTTPS
-- Exposing JWT secrets in client-side code
-- Not setting secure flags on cookies
+**สิ่งที่อาจผิดพลาด:**
+- จัดเก็บรหัสผ่านแบบข้อความธรรมดาหรือใช้การแฮชที่อ่อนแอ (MD5, SHA1)
+- ส่งข้อมูลที่ละเอียดอ่อนผ่าน HTTP แทน HTTPS
+- เปิดเผย JWT secrets ในโค้ดฝั่งไคลเอนต์
+- ไม่ตั้งค่า secure flags บน cookies
 
-#### Mitigation Method
+#### วิธีการบรรเทา
 
-**Implementation in Our Platform:**
+**การนำไปใช้ในแพลตฟอร์มของเรา:**
 
 ```javascript
-// Password Hashing with bcrypt
+// การแฮชรหัสผ่านด้วย bcrypt
 import bcrypt from 'bcryptjs';
 
 export const register = async (req, res) => {
   const { password } = req.body;
 
-  // Generate salt and hash password
+  // สร้าง salt และแฮชรหัสผ่าน
   const salt = await bcrypt.genSalt(10); // 10 rounds
   const password_hash = await bcrypt.hash(password, salt);
 
-  // Store only the hash, never plain password
+  // จัดเก็บเฉพาะ hash ไม่เก็บรหัสผ่านแบบธรรมดา
   await createUser({ ...userData, password_hash });
 };
 
-// Password Verification
+// การตรวจสอบรหัสผ่าน
 export const login = async (req, res) => {
   const user = await getUserByEmail(req.body.email);
 
-  // Compare plain password with hash
+  // เปรียบเทียบรหัสผ่านธรรมดากับ hash
   const isValid = await bcrypt.compare(req.body.password, user.password_hash);
 
   if (!isValid) {
@@ -115,56 +115,56 @@ export const login = async (req, res) => {
   }
 };
 
-// JWT Token Generation
+// การสร้าง JWT Token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: '7d' // Token expires after 7 days
+    expiresIn: '7d' // Token หมดอายุหลัง 7 วัน
   });
 };
 ```
 
-**Protection Measures:**
-1. **bcrypt Password Hashing:** Use industry-standard bcrypt with appropriate salt rounds (10+)
-2. **JWT with Expiration:** Tokens automatically expire after 7 days
-3. **Environment Variables:** Store JWT_SECRET in .env file, never in code
-4. **HTTPS Enforcement:** Use HTTPS in production to encrypt data in transit
-5. **Exclude Sensitive Fields:** Never return password_hash in API responses
-6. **Token Storage:** Store tokens securely (httpOnly cookies or secure localStorage)
+**มาตรการป้องกัน:**
+1. **การแฮชรหัสผ่านด้วย bcrypt:** ใช้ bcrypt มาตรฐานอุตสาหกรรมพร้อม salt rounds ที่เหมาะสม (10+)
+2. **JWT พร้อมการหมดอายุ:** Tokens หมดอายุอัตโนมัติหลัง 7 วัน
+3. **ตัวแปรสภาพแวดล้อม:** จัดเก็บ JWT_SECRET ในไฟล์ .env ไม่เคยอยู่ในโค้ด
+4. **การบังคับใช้ HTTPS:** ใช้ HTTPS ใน production เพื่อเข้ารหัสข้อมูลระหว่างการส่ง
+5. **ยกเว้นฟิลด์ที่ละเอียดอ่อน:** ไม่คืนค่า password_hash ใน API responses
+6. **การจัดเก็บ Token:** จัดเก็บ tokens อย่างปลอดภัย (httpOnly cookies หรือ secure localStorage)
 
 ---
 
 ### OWASP #3: A03:2021 – Injection (SQL Injection)
 
-#### Why This is a Risk for Our Platform
+#### เหตุใดจึงเป็นความเสี่ยงสำหรับแพลตฟอร์มของเรา
 
-SQL Injection occurs when untrusted data is sent to an interpreter as part of a command or query. In our Recipe Sharing Platform, user inputs include:
+SQL Injection เกิดขึ้นเมื่อข้อมูลที่ไม่น่าเชื่อถือถูกส่งไปยัง interpreter เป็นส่วนหนึ่งของคำสั่งหรือ query ในแพลตฟอร์มแชร์สูตรอาหารของเรา ข้อมูลป้อนเข้าของผู้ใช้ประกอบด้วย:
 
-- **Search Queries:** Users search for recipes by keywords
-- **Recipe Content:** Title, ingredients, instructions contain user text
-- **Email/Name:** User registration data
-- **Comments:** Rating comments with free text
+- **คำค้นหา:** ผู้ใช้ค้นหาสูตรตามคำสำคัญ
+- **เนื้อหาสูตร:** ชื่อ วัตถุดิบ ขั้นตอนมีข้อความของผู้ใช้
+- **อีเมล/ชื่อ:** ข้อมูลการลงทะเบียนของผู้ใช้
+- **ความคิดเห็น:** ความคิดเห็นการให้คะแนนพร้อมข้อความอิสระ
 
-**Real-World Attack Example:**
+**ตัวอย่างการโจมตีในโลกจริง:**
 
 ```javascript
-// VULNERABLE CODE (Don't do this!)
+// โค้ดที่มีช่องโหว่ (อย่าทำแบบนี้!)
 const searchQuery = req.query.search;
 const sql = `SELECT * FROM recipes WHERE title LIKE '%${searchQuery}%'`;
-// If searchQuery = "' OR '1'='1", this returns all recipes
+// ถ้า searchQuery = "' OR '1'='1", นี่จะคืนค่าสูตรทั้งหมด
 
-// If searchQuery = "'; DROP TABLE recipes; --"
-// This could delete the entire recipes table!
+// ถ้า searchQuery = "'; DROP TABLE recipes; --"
+// นี่อาจลบตาราง recipes ทั้งหมด!
 ```
 
-**Real-World Impact:**
-- Attacker gains access to all database records
-- Sensitive data (emails, password hashes) exposed
-- Data can be modified or deleted
-- Complete system compromise
+**ผลกระทบในโลกจริง:**
+- ผู้โจมตีเข้าถึงข้อมูลในฐานข้อมูลทั้งหมด
+- ข้อมูลที่ละเอียดอ่อน (อีเมล, password hashes) ถูกเปิดเผย
+- ข้อมูลสามารถถูกแก้ไขหรือลบได้
+- การบุกรุกระบบทั้งหมด
 
-#### Mitigation Method
+#### วิธีการบรรเทา
 
-**Implementation in Our Platform:**
+**การนำไปใช้ในแพลตฟอร์มของเรา:**
 
 ```javascript
 // config/database.js - Parameterized Queries
@@ -177,11 +177,11 @@ export const query = (sql, params = []) => {
   });
 };
 
-// controllers/recipeController.js - Safe Implementation
+// controllers/recipeController.js - การนำไปใช้ที่ปลอดภัย
 export const getAllRecipes = async (req, res) => {
   const { search = '' } = req.query;
 
-  // Use parameterized query with ? placeholders
+  // ใช้ parameterized query พร้อม ? placeholders
   let sql = `
     SELECT * FROM recipes r
     WHERE 1=1
@@ -194,12 +194,12 @@ export const getAllRecipes = async (req, res) => {
     params.push(`%${search}%`, `%${search}%`);
   }
 
-  // Parameters are properly escaped by the database driver
+  // พารามิเตอร์ถูก escape อย่างเหมาะสมโดย database driver
   const recipes = await query(sql, params);
   res.json(recipes);
 };
 
-// Input Validation with express-validator
+// การตรวจสอบข้อมูลป้อนเข้าด้วย express-validator
 import { body } from 'express-validator';
 
 export const validateRecipe = [
@@ -214,249 +214,249 @@ export const validateRecipe = [
     .notEmpty()
     .isLength({ min: 10 }),
 
-  // Validation middleware checks for errors
+  // มิดเดิลแวร์การตรวจสอบตรวจสอบข้อผิดพลาด
 ];
 ```
 
-**Protection Measures:**
-1. **Parameterized Queries:** Always use ? placeholders, never string concatenation
-2. **Input Validation:** Use express-validator to sanitize all user inputs
-3. **ORM/Query Builder:** SQLite3 library automatically escapes parameters
-4. **Least Privilege:** Database user has only necessary permissions (not admin)
-5. **Input Sanitization:** Trim, escape HTML, and validate data types
-6. **Error Handling:** Don't expose raw SQL errors to users
+**มาตรการป้องกัน:**
+1. **Parameterized Queries:** ใช้ ? placeholders เสมอ ไม่ใช้การต่อสตริง
+2. **การตรวจสอบข้อมูลป้อนเข้า:** ใช้ express-validator เพื่อทำความสะอาดข้อมูลป้อนเข้าทั้งหมด
+3. **ORM/Query Builder:** ไลบรารี SQLite3 escape พารามิเตอร์อัตโนมัติ
+4. **สิทธิ์ขั้นต่ำ:** ผู้ใช้ฐานข้อมูลมีเฉพาะสิทธิ์ที่จำเป็น (ไม่ใช่ admin)
+5. **การทำความสะอาดข้อมูลป้อนเข้า:** Trim, escape HTML และตรวจสอบประเภทข้อมูล
+6. **การจัดการข้อผิดพลาด:** ไม่เปิดเผยข้อผิดพลาด SQL ดิบให้ผู้ใช้
 
 ---
 
-## 2. PDPA Data Flow
+## 2. กระแสข้อมูล PDPA (PDPA Data Flow)
 
-### Personal Data Collected
+### ข้อมูลส่วนบุคคลที่เก็บรวบรวม
 
-According to Thailand's Personal Data Protection Act (PDPA), we collect and process the following personal data:
+ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคลของประเทศไทย (PDPA) เราเก็บรวบรวมและประมวลผลข้อมูลส่วนบุคคลดังต่อไปนี้:
 
-| Data Type | Purpose | Legal Basis | Retention Period |
-|-----------|---------|-------------|------------------|
-| Name | User identification, recipe attribution | Consent | Account lifetime |
-| Email Address | Authentication, communication | Consent | Account lifetime |
-| Password (hashed) | Authentication | Consent | Account lifetime |
-| IP Address (logs) | Security, abuse prevention | Legitimate Interest | 90 days |
-| Recipe Content | Service provision | Consent | Until user deletion |
-| Rating Comments | Service provision | Consent | Until user deletion |
+| ประเภทข้อมูล | วัตถุประสงค์ | ฐานทางกฎหมาย | ระยะเวลาเก็บรักษา |
+|------------|-----------|-------------|------------------|
+| ชื่อ | การระบุตัวตนผู้ใช้, การระบุผู้เขียนสูตร | ความยินยอม | ตลอดอายุบัญชี |
+| ที่อยู่อีเมล | การยืนยันตัวตน, การสื่อสาร | ความยินยอม | ตลอดอายุบัญชี |
+| รหัสผ่าน (ที่แฮชแล้ว) | การยืนยันตัวตน | ความยินยอม | ตลอดอายุบัญชี |
+| IP Address (logs) | ความปลอดภัย, การป้องกันการใช้ในทางที่ผิด | ประโยชน์อันชอบธรรม | 90 วัน |
+| เนื้อหาสูตร | การให้บริการ | ความยินยอม | จนกว่าผู้ใช้ลบ |
+| ความคิดเห็นการให้คะแนน | การให้บริการ | ความยินยอม | จนกว่าผู้ใช้ลบ |
 
 ---
 
-### PDPA Data Flow Diagram
+### แผนภาพกระแสข้อมูล PDPA
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    DATA COLLECTION                          │
+│                    การเก็บรวบรวมข้อมูล                       │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  User Registration Form                                     │
-│  ├─ Name (required)                                        │
-│  ├─ Email (required)                                       │
-│  └─ Password (required)                                    │
+│  แบบฟอร์มลงทะเบียนผู้ใช้                                     │
+│  ├─ ชื่อ (จำเป็น)                                          │
+│  ├─ อีเมล (จำเป็น)                                         │
+│  └─ รหัสผ่าน (จำเป็น)                                      │
 │                                                             │
-│  User Consent:                                             │
-│  ☑ I agree to Terms of Service and Privacy Policy         │
+│  ความยินยอมของผู้ใช้:                                        │
+│  ☑ ฉันยอมรับข้อตกลงการให้บริการและนโยบายความเป็นส่วนตัว      │
 │                                                             │
-│  Purpose: Authentication and service provision             │
-│  Legal Basis: Explicit consent (PDPA Section 19)          │
+│  วัตถุประสงค์: การยืนยันตัวตนและการให้บริการ                 │
+│  ฐานทางกฎหมาย: ความยินยอมโดยชัดแจ้ง (PDPA มาตรา 19)        │
 │                                                             │
 └──────────────────┬──────────────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    DATA PROCESSING                          │
+│                    การประมวลผลข้อมูล                         │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Backend Server (Node.js + Express)                        │
-│  ├─ Input Validation (express-validator)                  │
-│  ├─ Email normalization                                    │
-│  ├─ Password hashing (bcrypt, salt rounds: 10)           │
-│  ├─ JWT token generation                                   │
-│  └─ Access control checks                                  │
+│  เซิร์ฟเวอร์ Backend (Node.js + Express)                    │
+│  ├─ การตรวจสอบข้อมูลป้อนเข้า (express-validator)            │
+│  ├─ การทำให้อีเมลเป็นมาตรฐาน                                │
+│  ├─ การแฮชรหัสผ่าน (bcrypt, salt rounds: 10)               │
+│  ├─ การสร้าง JWT token                                     │
+│  └─ การตรวจสอบการควบคุมการเข้าถึง                           │
 │                                                             │
-│  Processing Principles:                                    │
-│  ✓ Purpose Limitation: Only for stated purposes           │
-│  ✓ Data Minimization: Only essential data collected       │
-│  ✓ Accuracy: User can update their own data              │
-│  ✓ Storage Limitation: Deleted on account deletion       │
+│  หลักการประมวลผล:                                           │
+│  ✓ การจำกัดวัตถุประสงค์: เฉพาะวัตถุประสงค์ที่ระบุเท่านั้น   │
+│  ✓ การลดข้อมูลให้น้อยที่สุด: เก็บเฉพาะข้อมูลที่จำเป็น        │
+│  ✓ ความถูกต้อง: ผู้ใช้สามารถอัปเดตข้อมูลของตนเอง            │
+│  ✓ การจำกัดการจัดเก็บ: ลบเมื่อลบบัญชี                       │
 │                                                             │
 └──────────────────┬──────────────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      DATA STORAGE                           │
+│                      การจัดเก็บข้อมูล                        │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  SQLite Database (Local File Storage)                      │
-│  ├─ users table                                           │
+│  ฐานข้อมูล SQLite (การจัดเก็บไฟล์ในเครื่อง)                 │
+│  ├─ ตาราง users                                            │
 │  │  ├─ id, name, email                                    │
-│  │  ├─ password_hash (NOT plain password)               │
+│  │  ├─ password_hash (ไม่ใช่รหัสผ่านธรรมดา)                │
 │  │  ├─ role, created_at                                  │
-│  │  └─ Encrypted fields for sensitive data              │
-│  ├─ recipes table                                         │
+│  │  └─ ฟิลด์ที่เข้ารหัสสำหรับข้อมูลที่ละเอียดอ่อน           │
+│  ├─ ตาราง recipes                                         │
 │  │  └─ user_id (foreign key), title, content            │
-│  └─ ratings table                                         │
+│  └─ ตาราง ratings                                         │
 │     └─ user_id, recipe_id, rating, comment               │
 │                                                             │
-│  Security Measures:                                        │
-│  ✓ Database file permissions (read/write restricted)     │
-│  ✓ No plain-text passwords stored                        │
-│  ✓ Foreign key constraints for data integrity            │
-│  ✓ Regular backups (encrypted)                           │
-│  ✓ Access logs for auditing                              │
+│  มาตรการความปลอดภัย:                                        │
+│  ✓ สิทธิ์ไฟล์ฐานข้อมูล (จำกัดการอ่าน/เขียน)                 │
+│  ✓ ไม่มีการจัดเก็บรหัสผ่านแบบข้อความธรรมดา                  │
+│  ✓ ข้อจำกัด Foreign key สำหรับความสมบูรณ์ของข้อมูล         │
+│  ✓ สำรองข้อมูลเป็นประจำ (เข้ารหัส)                          │
+│  ✓ Access logs สำหรับการตรวจสอบ                            │
 │                                                             │
-│  Location: Server in Thailand (PDPA compliant)            │
-│  Access: Only authorized backend processes                │
+│  ที่ตั้ง: เซิร์ฟเวอร์ในประเทศไทย (ปฏิบัติตาม PDPA)          │
+│  การเข้าถึง: เฉพาะกระบวนการ backend ที่ได้รับอนุญาต          │
 │                                                             │
 └──────────────────┬──────────────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      DATA SHARING                           │
+│                      การแชร์ข้อมูล                           │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Internal Sharing (Within Platform):                       │
-│  ├─ Public: Recipe titles, ingredients, instructions      │
-│  ├─ Public: User's display name (not email)              │
-│  ├─ Public: Ratings and comments                          │
-│  └─ Private: Email, password hash (never exposed)        │
+│  การแชร์ภายใน (ภายในแพลตฟอร์ม):                             │
+│  ├─ สาธารณะ: ชื่อสูตร วัตถุดิบ ขั้นตอน                      │
+│  ├─ สาธารณะ: ชื่อแสดงของผู้ใช้ (ไม่ใช่อีเมล)                 │
+│  ├─ สาธารณะ: คะแนนและความคิดเห็น                            │
+│  └─ ส่วนตัว: อีเมล, password hash (ไม่เปิดเผย)             │
 │                                                             │
-│  External Sharing:                                         │
-│  ├─ NONE - No third-party sharing                        │
-│  ├─ No analytics services                                 │
-│  ├─ No advertising networks                               │
-│  └─ No data sales                                         │
+│  การแชร์ภายนอก:                                              │
+│  ├─ ไม่มี - ไม่มีการแชร์กับบุคคลที่สาม                     │
+│  ├─ ไม่มีบริการวิเคราะห์                                    │
+│  ├─ ไม่มีเครือข่ายโฆษณา                                     │
+│  └─ ไม่มีการขายข้อมูล                                       │
 │                                                             │
-│  PDPA Rights Honored:                                      │
-│  ✓ Right to Access: Users can view their data            │
-│  ✓ Right to Rectification: Users can edit profile        │
-│  ✓ Right to Erasure: Account deletion removes all data   │
-│  ✓ Right to Data Portability: Export functionality       │
-│  ✓ Right to Object: Opt-out options provided            │
-│  ✓ Right to Withdraw Consent: Delete account anytime    │
+│  สิทธิ PDPA ที่เคารพ:                                       │
+│  ✓ สิทธิในการเข้าถึง: ผู้ใช้สามารถดูข้อมูลของตน            │
+│  ✓ สิทธิในการแก้ไข: ผู้ใช้สามารถแก้ไขโปรไฟล์               │
+│  ✓ สิทธิในการลบ: การลบบัญชีจะลบข้อมูลทั้งหมด                │
+│  ✓ สิทธิในการพกพาข้อมูล: ฟังก์ชันการส่งออก                  │
+│  ✓ สิทธิในการคัดค้าน: มีตัวเลือกยกเลิก                      │
+│  ✓ สิทธิในการถอนความยินยอม: ลบบัญชีได้ตลอดเวลา              │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### Data Flow Summary (Bullet Points)
+### สรุปกระแสข้อมูล (รายการแสดงหัวข้อย่อย)
 
-#### **Data Collection**
-- Name, email, and password collected during registration
-- Recipe content (title, ingredients, instructions, optional image URL) collected when creating recipes
-- Rating data (1-5 stars, optional comment) collected when rating recipes
-- IP addresses logged automatically for security purposes
-- User consent obtained through Terms of Service acceptance
-- Privacy Policy clearly explains data usage
+#### **การเก็บรวบรวมข้อมูล**
+- เก็บชื่อ อีเมล และรหัสผ่านระหว่างการลงทะเบียน
+- เก็บเนื้อหาสูตร (ชื่อ วัตถุดิบ ขั้นตอน URL รูปภาพที่ไม่บังคับ) เมื่อสร้างสูตร
+- เก็บข้อมูลการให้คะแนน (1-5 ดาว ความคิดเห็นที่ไม่บังคับ) เมื่อให้คะแนนสูตร
+- บันทึก IP addresses อัตโนมัติเพื่อวัตถุประสงค์ด้านความปลอดภัย
+- ได้รับความยินยอมของผู้ใช้ผ่านการยอมรับข้อตกลงการให้บริการ
+- นโยบายความเป็นส่วนตัวอธิบายการใช้ข้อมูลอย่างชัดเจน
 
-#### **Data Processing**
-- Passwords immediately hashed with bcrypt (10 salt rounds) before storage
-- Email addresses normalized to lowercase for consistency
-- Input validation performed on all fields (length, format, type)
-- JWT tokens generated for authentication (7-day expiration)
-- Access control checks performed on every protected endpoint
-- User ownership verified before any data modification
+#### **การประมวลผลข้อมูล**
+- รหัสผ่านถูกแฮชด้วย bcrypt ทันที (10 salt rounds) ก่อนการจัดเก็บ
+- ที่อยู่อีเมลทำให้เป็นมาตรฐานเป็นตัวพิมพ์เล็กเพื่อความสม่ำเสมอ
+- ดำเนินการตรวจสอบข้อมูลป้อนเข้าบนฟิลด์ทั้งหมด (ความยาว รูปแบบ ประเภท)
+- สร้าง JWT tokens สำหรับการยืนยันตัวตน (หมดอายุ 7 วัน)
+- ดำเนินการตรวจสอบการควบคุมการเข้าถึงบนทุก protected endpoint
+- ตรวจสอบความเป็นเจ้าของของผู้ใช้ก่อนการแก้ไขข้อมูลใดๆ
 
-#### **Data Storage**
-- All data stored in SQLite database on server
-- Password hashes stored (never plain-text passwords)
-- Database file has restricted read/write permissions (OS-level)
-- Foreign key constraints ensure data integrity
-- Unique constraints prevent duplicate entries (e.g., email, recipe-user ratings)
-- Server located in Thailand for PDPA compliance
-- Regular encrypted backups performed
-- Access logs maintained for audit trail (90-day retention)
+#### **การจัดเก็บข้อมูล**
+- จัดเก็บข้อมูลทั้งหมดในฐานข้อมูล SQLite บนเซิร์ฟเวอร์
+- จัดเก็บ password hashes (ไม่เคยเก็บรหัสผ่านแบบข้อความธรรมดา)
+- ไฟล์ฐานข้อมูลมีสิทธิ์การอ่าน/เขียนที่จำกัด (ระดับ OS)
+- ข้อจำกัด Foreign key รับประกันความสมบูรณ์ของข้อมูล
+- ข้อจำกัด UNIQUE ป้องกันรายการซ้ำ (เช่น อีเมล, การให้คะแนนสูตร-ผู้ใช้)
+- เซิร์ฟเวอร์ตั้งอยู่ในประเทศไทยเพื่อการปฏิบัติตาม PDPA
+- ดำเนินการสำรองข้อมูลที่เข้ารหัสเป็นประจำ
+- รักษา Access logs สำหรับร่องรอยการตรวจสอบ (เก็บ 90 วัน)
 
-#### **Data Sharing**
-- **Public Data:** Recipe content, user display names, ratings/comments visible to all users
-- **Private Data:** Email addresses and password hashes NEVER exposed in API responses
-- **No Third-Party Sharing:** Zero data shared with external services, analytics, or advertisers
-- **Internal Use Only:** Personal data used solely for platform functionality
-- **User Control:** Users decide what recipes to publish (all recipes are public by default)
+#### **การแชร์ข้อมูล**
+- **ข้อมูลสาธารณะ:** เนื้อหาสูตร ชื่อแสดงผู้ใช้ คะแนน/ความคิดเห็น มองเห็นได้สำหรับผู้ใช้ทุกคน
+- **ข้อมูลส่วนตัว:** ที่อยู่อีเมลและ password hashes ไม่เปิดเผยใน API responses
+- **ไม่มีการแชร์กับบุคคลที่สาม:** ไม่แชร์ข้อมูลกับบริการภายนอก การวิเคราะห์ หรือผู้โฆษณา
+- **ใช้ภายในเท่านั้น:** ข้อมูลส่วนบุคคลใช้เฉพาะสำหรับฟังก์ชันแพลตฟอร์มเท่านั้น
+- **การควบคุมของผู้ใช้:** ผู้ใช้ตัดสินใจว่าจะเผยแพร่สูตรอะไร (สูตรทั้งหมดเป็นสาธารณะตามค่าเริ่มต้น)
 
 ---
 
-## 3. Security Checklist (5 Items)
+## 3. รายการตรวจสอบความปลอดภัย (5 รายการ)
 
-### ✅ 1. Input Validation on All Forms
+### ✅ 1. การตรวจสอบข้อมูลป้อนเข้าบนฟอร์มทั้งหมด
 
-**Implementation:**
-- Use `express-validator` middleware on all API endpoints
-- Validate data types, lengths, and formats
-- Sanitize inputs to remove HTML/JavaScript
-- Reject requests with validation errors
+**การนำไปใช้:**
+- ใช้มิดเดิลแวร์ `express-validator` บนทุก API endpoints
+- ตรวจสอบประเภทข้อมูล ความยาว และรูปแบบ
+- ทำความสะอาดข้อมูลป้อนเข้าเพื่อลบ HTML/JavaScript
+- ปฏิเสธ requests ที่มีข้อผิดพลาดในการตรวจสอบ
 
-**Code Example:**
+**ตัวอย่างโค้ด:**
 ```javascript
 export const validateRecipe = [
   body('title').trim().notEmpty().isLength({ min: 3, max: 200 }),
   body('ingredients').trim().notEmpty().isLength({ min: 10 }),
   body('instructions').trim().notEmpty().isLength({ min: 20 }),
   body('image_url').optional().isURL(),
-  validate // Middleware that checks for errors
+  validate // มิดเดิลแวร์ที่ตรวจสอบข้อผิดพลาด
 ];
 ```
 
-**Protection Against:**
+**ป้องกันจาก:**
 - SQL Injection
 - Cross-Site Scripting (XSS)
-- Buffer overflow attacks
-- Data integrity issues
+- การโจมตีแบบ Buffer overflow
+- ปัญหาความสมบูรณ์ของข้อมูล
 
 ---
 
-### ✅ 2. Password Hashing (bcrypt)
+### ✅ 2. การแฮชรหัสผ่าน (bcrypt)
 
-**Implementation:**
-- Use bcryptjs library with 10+ salt rounds
-- Never store plain-text passwords
-- Hash passwords before database insertion
-- Use secure comparison (bcrypt.compare) for login
+**การนำไปใช้:**
+- ใช้ไลบรารี bcryptjs พร้อม 10+ salt rounds
+- ไม่จัดเก็บรหัสผ่านแบบข้อความธรรมดา
+- แฮชรหัสผ่านก่อนการใส่ลงฐานข้อมูล
+- ใช้การเปรียบเทียบที่ปลอดภัย (bcrypt.compare) สำหรับการเข้าสู่ระบบ
 
-**Code Example:**
+**ตัวอย่างโค้ด:**
 ```javascript
-// Registration
+// การลงทะเบียน
 const salt = await bcrypt.genSalt(10);
 const password_hash = await bcrypt.hash(password, salt);
 
-// Login verification
+// การตรวจสอบการเข้าสู่ระบบ
 const isValid = await bcrypt.compare(inputPassword, user.password_hash);
 ```
 
-**Protection Against:**
-- Password database breaches
-- Rainbow table attacks
-- Brute force attacks (slow hashing)
-- Dictionary attacks
+**ป้องกันจาก:**
+- การละเมิดฐานข้อมูลรหัสผ่าน
+- การโจมตีแบบ Rainbow table
+- การโจมตีแบบ Brute force (การแฮชช้า)
+- การโจมตีแบบ Dictionary
 
 ---
 
-### ✅ 3. Rate Limiting on API Endpoints
+### ✅ 3. Rate Limiting บน API Endpoints
 
-**Implementation:**
-- Limit number of requests per IP address
-- Implement exponential backoff for failed login attempts
-- Prevent spam recipe/rating creation
+**การนำไปใช้:**
+- จำกัดจำนวน requests ต่อ IP address
+- ใช้ exponential backoff สำหรับความพยายามเข้าสู่ระบบที่ล้มเหลว
+- ป้องกันการสร้างสูตร/การให้คะแนนแบบสแปม
 
-**Recommended Configuration:**
+**การกำหนดค่าที่แนะนำ:**
 ```javascript
 import rateLimit from 'express-rate-limit';
 
-// General API rate limiting
+// การจำกัดอัตรา API ทั่วไป
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  windowMs: 15 * 60 * 1000, // 15 นาที
+  max: 100, // 100 requests ต่อ window
   message: 'Too many requests, please try again later'
 });
 
-// Strict rate limiting for auth endpoints
+// การจำกัดอัตราที่เข้มงวดสำหรับ auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // 5 attempts per window
+  max: 5, // 5 attempts ต่อ window
   message: 'Too many login attempts, please try again later'
 });
 
@@ -464,27 +464,27 @@ app.use('/api/', apiLimiter);
 app.use('/api/auth/', authLimiter);
 ```
 
-**Protection Against:**
-- Brute force attacks
-- DDoS attacks
-- Spam content creation
-- API abuse
+**ป้องกันจาก:**
+- การโจมตีแบบ Brute force
+- การโจมตีแบบ DDoS
+- การสร้างเนื้อหาแบบสแปม
+- การใช้ API ในทางที่ผิด
 
 ---
 
-### ✅ 4. HTTPS Encryption (Production)
+### ✅ 4. การเข้ารหัส HTTPS (Production)
 
-**Implementation:**
-- Use Let's Encrypt for free SSL certificates
-- Enforce HTTPS redirect from HTTP
-- Set secure headers (HSTS, CSP)
-- Use secure cookies with httpOnly and secure flags
+**การนำไปใช้:**
+- ใช้ Let's Encrypt สำหรับ SSL certificates ฟรี
+- บังคับใช้การ redirect HTTPS จาก HTTP
+- ตั้งค่า secure headers (HSTS, CSP)
+- ใช้ secure cookies พร้อม httpOnly และ secure flags
 
-**Configuration:**
+**การกำหนดค่า:**
 ```javascript
-// In production
+// ใน production
 if (process.env.NODE_ENV === 'production') {
-  // Enforce HTTPS
+  // บังคับใช้ HTTPS
   app.use((req, res, next) => {
     if (req.header('x-forwarded-proto') !== 'https') {
       res.redirect(`https://${req.header('host')}${req.url}`);
@@ -501,35 +501,35 @@ if (process.env.NODE_ENV === 'production') {
 }
 ```
 
-**Protection Against:**
-- Man-in-the-middle attacks
-- Packet sniffing
-- Session hijacking
-- Cookie theft
+**ป้องกันจาก:**
+- การโจมตีแบบ Man-in-the-middle
+- การดักฟัง Packet
+- การขโมย Session
+- การขโมย Cookie
 
 ---
 
-### ✅ 5. Access Logs for Audit Trail
+### ✅ 5. Access Logs สำหรับร่องรอยการตรวจสอบ
 
-**Implementation:**
-- Log all API requests with timestamp
-- Record user actions (create, update, delete)
-- Monitor failed authentication attempts
-- Store logs securely for PDPA compliance
+**การนำไปใช้:**
+- บันทึก API requests ทั้งหมดพร้อม timestamp
+- บันทึกการกระทำของผู้ใช้ (สร้าง อัปเดต ลบ)
+- ติดตามความพยายามการยืนยันตัวตนที่ล้มเหลว
+- จัดเก็บ logs อย่างปลอดภัยเพื่อการปฏิบัติตาม PDPA
 
-**Code Example:**
+**ตัวอย่างโค้ด:**
 ```javascript
 import morgan from 'morgan';
 import fs from 'fs';
 import path from 'path';
 
-// Create write stream for access logs
+// สร้าง write stream สำหรับ access logs
 const accessLogStream = fs.createWriteStream(
   path.join(__dirname, 'logs', 'access.log'),
   { flags: 'a' }
 );
 
-// Log format: timestamp, IP, method, URL, status, user
+// รูปแบบ log: timestamp, IP, method, URL, status, user
 morgan.token('user', (req) => req.user?.email || 'anonymous');
 
 app.use(morgan(
@@ -537,7 +537,7 @@ app.use(morgan(
   { stream: accessLogStream }
 ));
 
-// Custom audit logging for sensitive operations
+// การบันทึกการตรวจสอบแบบกำหนดเองสำหรับการดำเนินการที่ละเอียดอ่อน
 export const auditLog = (action, userId, details) => {
   const logEntry = {
     timestamp: new Date().toISOString(),
@@ -548,33 +548,33 @@ export const auditLog = (action, userId, details) => {
   fs.appendFileSync('logs/audit.log', JSON.stringify(logEntry) + '\n');
 };
 
-// Usage
+// การใช้งาน
 await deleteRecipe(recipeId);
 auditLog('DELETE_RECIPE', req.user.id, { recipeId });
 ```
 
-**Benefits:**
-- PDPA compliance (data processing records)
-- Security incident investigation
-- User activity monitoring
-- Compliance audits
-- Identify unusual patterns
+**ประโยชน์:**
+- การปฏิบัติตาม PDPA (บันทึกการประมวลผลข้อมูล)
+- การสอบสวนเหตุการณ์ความปลอดภัย
+- การติดตามกิจกรรมของผู้ใช้
+- การตรวจสอบการปฏิบัติตาม
+- ระบุรูปแบบที่ผิดปกติ
 
-**Log Retention:**
-- Access logs: 90 days
-- Audit logs: 1 year
-- Security logs: 2 years
-
----
-
-## Summary
-
-This Recipe Sharing Platform implements comprehensive security measures aligned with OWASP Top 10 guidelines and full PDPA compliance. The three critical vulnerabilities addressed are Broken Access Control, Cryptographic Failures, and SQL Injection, each with robust mitigation strategies. The platform's data flow respects user privacy through transparent collection, secure processing, encrypted storage, and zero third-party sharing. The security checklist ensures defense-in-depth with multiple layers of protection from input validation to audit logging.
+**การเก็บรักษา Log:**
+- Access logs: 90 วัน
+- Audit logs: 1 ปี
+- Security logs: 2 ปี
 
 ---
 
-**Document Version:** 1.0
-**Date:** November 24, 2025
-**Status:** Final
-**PDPA Compliance:** Full
-**OWASP Coverage:** A01, A02, A03 (2021)
+## สรุป
+
+แพลตฟอร์มแชร์สูตรอาหารนี้นำมาตรการความปลอดภัยที่ครอบคลุมซึ่งสอดคล้องกับแนวทาง OWASP Top 10 และการปฏิบัติตาม PDPA อย่างเต็มที่ ช่องโหว่สำคัญสามประการที่จัดการคือ Broken Access Control, Cryptographic Failures และ SQL Injection โดยแต่ละรายการมีกลยุทธ์การบรรเทาที่แข็งแกร่ง กระแสข้อมูลของแพลตฟอร์มเคารพความเป็นส่วนตัวของผู้ใช้ผ่านการเก็บรวบรวมที่โปร่งใส การประมวลผลที่ปลอดภัย การจัดเก็บที่เข้ารหัส และการไม่แชร์กับบุคคลที่สาม รายการตรวจสอบความปลอดภัยรับประกันการป้องกันแบบหลายชั้นตั้งแต่การตรวจสอบข้อมูลป้อนเข้าไปจนถึงการบันทึกการตรวจสอบ
+
+---
+
+**เวอร์ชันเอกสาร:** 1.0
+**วันที่:** 24 พฤศจิกายน 2568
+**สถานะ:** Final
+**การปฏิบัติตาม PDPA:** เต็มรูปแบบ
+**ครอบคลุม OWASP:** A01, A02, A03 (2021)

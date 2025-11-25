@@ -1,207 +1,207 @@
-# Task 1 — System Requirement Analysis (20 points)
+# Task 1 — การวิเคราะห์ข้อกำหนดของระบบ (20 คะแนน)
 
-**Student:** Mr. Athichon Kaewla
-**Student ID:** 66315030406
-**Course:** 1305308 Platform Development
-**Project:** Recipe Sharing Platform with Ratings
-
----
-
-## 1. Problem Statement
-
-Home cooks and food enthusiasts often struggle to find reliable recipes and have no centralized platform to share their culinary creations with a community. Existing recipe websites lack proper user-generated content validation through community ratings, making it difficult to identify quality recipes. Users need a simple, trustworthy platform where they can discover new dishes, share their own recipes, and provide feedback through ratings and comments. This platform addresses the need for a community-driven recipe sharing system that empowers users to both contribute and benefit from collective culinary knowledge. By implementing a rating system, users can quickly identify popular and well-tested recipes, saving time and reducing cooking failures.
+**นักศึกษา:** นายอธิชนม์ แก้วหล้า
+**รหัสนักศึกษา:** 66315030406
+**รายวิชา:** 1305308 การพัฒนาแพลตฟอร์ม
+**โปรเจค:** แพลตฟอร์มแชร์สูตรอาหารพร้อมระบบให้คะแนน
 
 ---
 
-## 2. Core User Stories (Minimum 5)
+## 1. คำอธิบายปัญหา (Problem Statement)
 
-### User Story 1: Browse Recipes
-**As a** home cook
-**I want to** browse all available recipes on the platform
-**So that** I can discover new dishes to try and expand my cooking repertoire
-
-**Acceptance Criteria:**
-- View all recipes in a grid/list format
-- See recipe title, image, and average rating at a glance
-- Access recipe details by clicking on any recipe card
+คนทำอาหารที่บ้านและผู้ที่ชื่นชอบการทำอาหารมักประสบปัญหาในการหาสูตรอาหารที่เชื่อถือได้ และไม่มีแพลตฟอร์มกลางในการแชร์ผลงานการทำอาหารของตนเองกับชุมชน เว็บไซต์สูตรอาหารที่มีอยู่ขาดระบบตรวจสอบคุณภาพเนื้อหาที่สร้างโดยผู้ใช้ผ่านการให้คะแนนจากชุมชน ทำให้ยากต่อการระบุสูตรอาหารที่มีคุณภาพ ผู้ใช้ต้องการแพลตฟอร์มที่เรียบง่ายและเชื่อถือได้ที่พวกเขาสามารถค้นพบเมนูอาหารใหม่ๆ แชร์สูตรอาหารของตนเอง และให้ข้อเสนอแนะผ่านการให้คะแนนและความคิดเห็น แพลตฟอร์มนี้จัดการกับความต้องการของระบบแชร์สูตรอาหารที่ขับเคลื่อนโดยชุมชน ซึ่งช่วยให้ผู้ใช้สามารถมีส่วนร่วมและได้รับประโยชน์จากความรู้ด้านการทำอาหารร่วมกัน ด้วยการนำระบบการให้คะแนนมาใช้ ผู้ใช้สามารถระบุสูตรอาหารที่ได้รับความนิยมและผ่านการทดสอบแล้วได้อย่างรวดเร็ว ช่วยประหยัดเวลาและลดความล้มเหลวในการทำอาหาร
 
 ---
 
-### User Story 2: Share Recipes
-**As a** recipe creator
-**I want to** share my recipes with the community
-**So that** others can benefit from my cooking experience and try my dishes
+## 2. User Stories หลัก (อย่างน้อย 5 เรื่อง)
 
-**Acceptance Criteria:**
-- Create new recipes with title, ingredients, instructions, and optional image
-- Edit my own recipes after publishing
-- Delete my recipes if needed
-- View all recipes I have created in one place
+### User Story 1: เรียกดูสูตรอาหาร
+**ในฐานะ** คนทำอาหารที่บ้าน
+**ฉันต้องการ** เรียกดูสูตรอาหารทั้งหมดที่มีบนแพลตฟอร์ม
+**เพื่อที่** จะได้ค้นพบเมนูอาหารใหม่ๆ เพื่อลองทำและเพิ่มพูนทักษะการทำอาหาร
 
----
-
-### User Story 3: Rate and Review Recipes
-**As a** registered user
-**I want to** rate recipes I've tried (1-5 stars) and leave comments
-**So that** I can help other users find quality recipes and provide constructive feedback
-
-**Acceptance Criteria:**
-- Rate any recipe (except my own) from 1 to 5 stars
-- Add optional text comments with my rating
-- View all ratings and reviews for a recipe
-- Edit or delete my own ratings
+**เกณฑ์การยอมรับ (Acceptance Criteria):**
+- ดูสูตรอาหารทั้งหมดในรูปแบบ grid หรือ list
+- เห็นชื่อสูตร รูปภาพ และคะแนนเฉลี่ยได้ในทันที
+- เข้าถึงรายละเอียดสูตรโดยคลิกที่การ์ดสูตรอาหาร
 
 ---
 
-### User Story 4: Search for Recipes
-**As a** user planning a meal
-**I want to** search recipes by title or ingredients
-**So that** I can find recipes that match what I have in my kitchen
+### User Story 2: แชร์สูตรอาหาร
+**ในฐานะ** ผู้สร้างสูตรอาหาร
+**ฉันต้องการ** แชร์สูตรอาหารของฉันกับชุมชน
+**เพื่อที่** คนอื่นจะได้รับประโยชน์จากประสบการณ์การทำอาหารของฉันและลองทำเมนูของฉัน
 
-**Acceptance Criteria:**
-- Enter search terms in a search bar
-- Get filtered results matching recipe titles or ingredients
-- See results update dynamically
-- Return to all recipes by clearing the search
-
----
-
-### User Story 5: User Authentication
-**As a** new visitor
-**I want to** register for an account and login securely
-**So that** I can create recipes and rate others' recipes
-
-**Acceptance Criteria:**
-- Register with name, email, and password
-- Login with email and password
-- Receive a secure authentication token
-- Access protected features (create recipe, rate)
-- Logout safely
+**เกณฑ์การยอมรับ:**
+- สร้างสูตรอาหารใหม่พร้อมชื่อ วัตถุดิบ ขั้นตอน และรูปภาพ (ไม่บังคับ)
+- แก้ไขสูตรอาหารของตนเองหลังจากเผยแพร่แล้ว
+- ลบสูตรอาหารของตนเองหากต้องการ
+- ดูสูตรอาหารทั้งหมดที่ตนเองสร้างในที่เดียว
 
 ---
 
-### User Story 6: View Recipe Details
-**As a** user interested in cooking
-**I want to** view complete recipe details including ingredients, instructions, and community ratings
-**So that** I have all information needed to cook the dish successfully
+### User Story 3: ให้คะแนนและรีวิวสูตรอาหาร
+**ในฐานะ** ผู้ใช้ที่ลงทะเบียนแล้ว
+**ฉันต้องการ** ให้คะแนนสูตรอาหารที่ลองทำแล้ว (1-5 ดาว) และเขียนความคิดเห็น
+**เพื่อที่** จะช่วยให้ผู้ใช้คนอื่นหาสูตรอาหารที่มีคุณภาพและให้ข้อเสนอแนะที่สร้างสรรค์
 
-**Acceptance Criteria:**
-- See full recipe details (title, image, ingredients, instructions)
-- View average rating and number of reviews
-- Read all user comments and ratings
-- See who created the recipe and when
-
----
-
-### User Story 7: Manage My Recipes
-**As a** recipe contributor
-**I want to** view and manage all my submitted recipes
-**So that** I can keep my recipe collection organized and up-to-date
-
-**Acceptance Criteria:**
-- Access "My Recipes" page
-- View all recipes I've created
-- Quickly edit or delete any of my recipes
-- See ratings my recipes have received
+**เกณฑ์การยอมรับ:**
+- ให้คะแนนสูตรอาหารใดๆ (ยกเว้นสูตรของตนเอง) ตั้งแต่ 1 ถึง 5 ดาว
+- เพิ่มความคิดเห็นข้อความที่ไม่บังคับพร้อมกับการให้คะแนน
+- ดูคะแนนและรีวิวทั้งหมดของสูตรอาหาร
+- แก้ไขหรือลบการให้คะแนนของตนเอง
 
 ---
 
-## 3. Non-Functional Requirements (Minimum 3)
+### User Story 4: ค้นหาสูตรอาหาร
+**ในฐานะ** ผู้ใช้ที่กำลังวางแผนมื้ออาหาร
+**ฉันต้องการ** ค้นหาสูตรอาหารตามชื่อหรือวัตถุดิบ
+**เพื่อที่** จะสามารถหาสูตรที่ตรงกับสิ่งที่มีในครัวของฉัน
 
-### NFR 1: Performance
-- **Requirement:** The platform must load recipe listings within 3 seconds on standard broadband connections
-- **Measurement:** Page load time < 3 seconds
-- **Rationale:** Users expect fast response times for a good user experience
-- **Implementation:** Optimize database queries, implement pagination, use efficient image loading
-
-### NFR 2: Security
-- **Requirement:** All user passwords must be securely hashed using bcrypt, and API authentication must use JWT tokens
-- **Measurement:** No plain-text passwords in database, token expiration set to 7 days
-- **Rationale:** Protect user credentials and prevent unauthorized access
-- **Implementation:** bcrypt password hashing with salt rounds, JWT authentication middleware, HTTPS in production
-
-### NFR 3: Usability
-- **Requirement:** The platform must be fully responsive and usable on mobile devices, tablets, and desktops
-- **Measurement:** All features accessible on screens from 320px to 1920px width
-- **Rationale:** Users may access recipes from various devices (phone in kitchen, tablet on counter)
-- **Implementation:** Responsive design using Tailwind CSS, mobile-first approach, touch-friendly UI elements
-
-### NFR 4: Scalability
-- **Requirement:** The database should support at least 1,000 recipes and 10,000 ratings without performance degradation
-- **Measurement:** Query response time remains < 500ms with full dataset
-- **Rationale:** Platform should handle growth in content and users
-- **Implementation:** Indexed database queries, efficient SQLite schema design, pagination for large datasets
-
-### NFR 5: Data Integrity
-- **Requirement:** Rating values must be constrained to 1-5 range, and users cannot rate the same recipe twice
-- **Measurement:** Database constraints enforce rules, no duplicate ratings allowed
-- **Rationale:** Maintain data quality and prevent rating manipulation
-- **Implementation:** Database CHECK constraints, UNIQUE constraints, server-side validation
+**เกณฑ์การยอมรับ:**
+- ป้อนคำค้นหาในช่องค้นหา
+- ได้ผลลัพธ์ที่กรองแล้วซึ่งตรงกับชื่อสูตรหรือวัตถุดิบ
+- เห็นผลลัพธ์อัปเดตแบบไดนามิก
+- กลับไปดูสูตรทั้งหมดโดยล้างคำค้นหา
 
 ---
 
-## 4. Key Risks & Threats (3 Items)
+### User Story 5: การยืนยันตัวตนของผู้ใช้
+**ในฐานะ** ผู้เยี่ยมชมใหม่
+**ฉันต้องการ** ลงทะเบียนบัญชีและเข้าสู่ระบบอย่างปลอดภัย
+**เพื่อที่** จะสามารถสร้างสูตรอาหารและให้คะแนนสูตรของผู้อื่น
 
-### Risk 1: Technical Risk — Database Performance with Large Images
-**Description:** As the platform grows, storing and retrieving large recipe images could slow down the application significantly, especially with SQLite's file-based nature.
-
-**Impact:** High — Poor performance could lead to user frustration and abandonment
-
-**Mitigation Strategies:**
-- Store only image URLs in the database, not the actual image files
-- Use external image hosting services (e.g., Cloudinary, AWS S3)
-- Implement image compression and optimization before upload
-- Use lazy loading for images in recipe lists
-- Set maximum image size limits (e.g., 5MB)
-
-**Contingency Plan:** If performance degrades, migrate to PostgreSQL with separate file storage
+**เกณฑ์การยอมรับ:**
+- ลงทะเบียนด้วยชื่อ อีเมล และรหัสผ่าน
+- เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน
+- ได้รับ token สำหรับยืนยันตัวตนที่ปลอดภัย
+- เข้าถึงฟีเจอร์ที่มีการป้องกัน (สร้างสูตร ให้คะแนน)
+- ออกจากระบบอย่างปลอดภัย
 
 ---
 
-### Risk 2: Security Risk — Unauthorized Data Access
-**Description:** Attackers could attempt to access or modify other users' recipes or ratings through API manipulation, broken authentication, or SQL injection attacks.
+### User Story 6: ดูรายละเอียดสูตรอาหาร
+**ในฐานะ** ผู้ใช้ที่สนใจทำอาหาร
+**ฉันต้องการ** ดูรายละเอียดสูตรอาหารที่สมบูรณ์ รวมถึงวัตถุดิบ ขั้นตอน และคะแนนจากชุมชน
+**เพื่อที่** จะมีข้อมูลทั้งหมดที่จำเป็นในการทำอาหารเมนูนั้นได้สำเร็จ
 
-**Impact:** Critical — Could compromise user data privacy and platform integrity
-
-**Mitigation Strategies:**
-- Implement JWT authentication on all protected endpoints
-- Use parameterized queries to prevent SQL injection
-- Validate user ownership before allowing edit/delete operations
-- Implement rate limiting to prevent brute force attacks
-- Use HTTPS in production to encrypt data in transit
-- Apply CORS restrictions to limit API access
-
-**Contingency Plan:** Regular security audits, immediate patching of vulnerabilities, user notification system for breaches
+**เกณฑ์การยอมรับ:**
+- เห็นรายละเอียดสูตรอาหารที่สมบูรณ์ (ชื่อ รูปภาพ วัตถุดิบ ขั้นตอน)
+- ดูคะแนนเฉลี่ยและจำนวนรีวิว
+- อ่านความคิดเห็นและคะแนนจากผู้ใช้ทั้งหมด
+- เห็นว่าใครสร้างสูตรและเมื่อไหร่
 
 ---
 
-### Risk 3: Operational Risk — Spam and Inappropriate Content
-**Description:** Malicious users could spam the platform with fake recipes, inappropriate images, or offensive comments in ratings, degrading the quality of the community.
+### User Story 7: จัดการสูตรอาหารของฉัน
+**ในฐานะ** ผู้มีส่วนร่วมในการสร้างสูตร
+**ฉันต้องการ** ดูและจัดการสูตรอาหารทั้งหมดที่ฉันส่ง
+**เพื่อที่** จะสามารถเก็บคอลเลกชั่นสูตรของฉันให้เป็นระเบียบและทันสมัย
 
-**Impact:** Medium — Could damage platform reputation and user trust
-
-**Mitigation Strategies:**
-- Implement content moderation system (manual or automated)
-- Add reporting functionality for users to flag inappropriate content
-- Implement admin role for content management
-- Require email verification for new accounts
-- Add rate limiting on recipe and rating creation (e.g., max 10 recipes per day)
-- Store user activity logs for audit trails
-
-**Contingency Plan:** Admin dashboard for quick content removal, temporary user banning system, community guidelines enforcement
+**เกณฑ์การยอมรับ:**
+- เข้าถึงหน้า "สูตรของฉัน" (My Recipes)
+- ดูสูตรอาหารทั้งหมดที่ฉันสร้าง
+- แก้ไขหรือลบสูตรของฉันได้อย่างรวดเร็ว
+- เห็นคะแนนที่สูตรของฉันได้รับ
 
 ---
 
-## Summary
+## 3. ข้อกำหนดที่ไม่ใช่ฟังก์ชัน (Non-Functional Requirements) (อย่างน้อย 3 ข้อ)
 
-This Recipe Sharing Platform addresses a clear need in the home cooking community by providing a centralized, community-driven platform for sharing and discovering recipes. The system requirements focus on core user needs (browsing, creating, rating) while maintaining high standards for performance, security, and usability. The identified risks have been analyzed with practical mitigation strategies to ensure platform reliability and safety.
+### NFR 1: ประสิทธิภาพ (Performance)
+- **ข้อกำหนด:** แพลตฟอร์มต้องโหลดรายการสูตรอาหารภายใน 3 วินาทีบนการเชื่อมต่ออินเทอร์เน็ตมาตรฐาน
+- **การวัด:** เวลาโหลดหน้าเว็บ < 3 วินาที
+- **เหตุผล:** ผู้ใช้คาดหวังเวลาตอบสนองที่รวดเร็วเพื่อประสบการณ์การใช้งานที่ดี
+- **การนำไปใช้:** ปรับปรุง database queries, ใช้ pagination, ใช้การโหลดรูปภาพที่มีประสิทธิภาพ
 
-**Total User Stories:** 7
-**Total Non-Functional Requirements:** 5
-**Total Risks Identified:** 3
+### NFR 2: ความปลอดภัย (Security)
+- **ข้อกำหนด:** รหัสผ่านของผู้ใช้ทั้งหมดต้องถูกแฮชอย่างปลอดภัยโดยใช้ bcrypt และการยืนยันตัวตน API ต้องใช้ JWT tokens
+- **การวัด:** ไม่มีรหัสผ่านแบบข้อความธรรมดาในฐานข้อมูล, token หมดอายุตั้งค่าไว้ที่ 7 วัน
+- **เหตุผล:** ปกป้องข้อมูลประจำตัวผู้ใช้และป้องกันการเข้าถึงที่ไม่ได้รับอนุญาต
+- **การนำไปใช้:** การแฮชรหัสผ่านด้วย bcrypt พร้อม salt rounds, มิดเดิลแวร์ยืนยันตัวตนด้วย JWT, HTTPS ในโหมด production
+
+### NFR 3: ความสะดวกในการใช้งาน (Usability)
+- **ข้อกำหนด:** แพลตฟอร์มต้องเป็น responsive และใช้งานได้บนอุปกรณ์มือถือ แท็บเล็ต และคอมพิวเตอร์
+- **การวัด:** ฟีเจอร์ทั้งหมดเข้าถึงได้บนหน้าจอขนาดตั้งแต่ 320px ถึง 1920px
+- **เหตุผล:** ผู้ใช้อาจเข้าถึงสูตรอาหารจากอุปกรณ์ต่างๆ (โทรศัพท์ในครัว แท็บเล็ตบนเคาน์เตอร์)
+- **การนำไปใช้:** การออกแบบ responsive ด้วย Tailwind CSS, แนวทาง mobile-first, องค์ประกอบ UI ที่เป็นมิตรกับการสัมผัส
+
+### NFR 4: ความสามารถในการขยายขนาด (Scalability)
+- **ข้อกำหนด:** ฐานข้อมูลควรรองรับสูตรอาหารอย่างน้อย 1,000 รายการและ 10,000 การให้คะแนนโดยไม่มีปัญหาด้านประสิทธิภาพ
+- **การวัด:** เวลาตอบสนองของ query ยังคง < 500ms เมื่อมีข้อมูลเต็ม
+- **เหตุผล:** แพลตฟอร์มควรรองรับการเติบโตของเนื้อหาและผู้ใช้
+- **การนำไปใช้:** indexed database queries, การออกแบบ SQLite schema ที่มีประสิทธิภาพ, pagination สำหรับชุดข้อมูลขนาดใหญ่
+
+### NFR 5: ความสมบูรณ์ของข้อมูล (Data Integrity)
+- **ข้อกำหนด:** ค่าคะแนนต้องจำกัดอยู่ในช่วง 1-5 และผู้ใช้ไม่สามารถให้คะแนนสูตรเดียวกันได้สองครั้ง
+- **การวัด:** ข้อจำกัดของฐานข้อมูลบังคับใช้กฎเกณฑ์ ไม่อนุญาตการให้คะแนนซ้ำ
+- **เหตุผล:** รักษาคุณภาพข้อมูลและป้องกันการจัดการคะแนน
+- **การนำไปใช้:** ข้อจำกัด CHECK ของฐานข้อมูล, ข้อจำกัด UNIQUE, การตรวจสอบฝั่ง server
 
 ---
 
-**Document Version:** 1.0
-**Date:** November 24, 2025
-**Status:** Final
+## 4. ความเสี่ยงและภัยคุกคามหลัก (3 รายการ)
+
+### ความเสี่ยงที่ 1: ความเสี่ยงทางเทคนิค — ประสิทธิภาพของฐานข้อมูลกับรูปภาพขนาดใหญ่
+**คำอธิบาย:** เมื่อแพลตฟอร์มเติบโต การจัดเก็บและดึงรูปภาพสูตรอาหารขนาดใหญ่อาจทำให้แอปพลิเคชันช้าลงอย่างมาก โดยเฉพาะกับลักษณะของ SQLite ที่เป็นไฟล์
+
+**ผลกระทบ:** สูง — ประสิทธิภาพที่ไม่ดีอาจนำไปสู่ความหงุดหงิดและการละทิ้งของผู้ใช้
+
+**กลยุทธ์การบรรเทา:**
+- จัดเก็บเฉพาะ URL ของรูปภาพในฐานข้อมูล ไม่ใช่ไฟล์รูปภาพจริง
+- ใช้บริการโฮสต์รูปภาพภายนอก (เช่น Cloudinary, AWS S3)
+- ใช้การบีบอัดและการปรับปรุงรูปภาพก่อนอัปโหลด
+- ใช้ lazy loading สำหรับรูปภาพในรายการสูตร
+- กำหนดขนาดรูปภาพสูงสุด (เช่น 5MB)
+
+**แผนฉุกเฉิน:** หากประสิทธิภาพลดลง ให้ย้ายไปใช้ PostgreSQL พร้อมระบบจัดเก็บไฟล์แยก
+
+---
+
+### ความเสี่ยงที่ 2: ความเสี่ยงด้านความปลอดภัย — การเข้าถึงข้อมูลที่ไม่ได้รับอนุญาต
+**คำอธิบาย:** ผู้โจมตีอาจพยายามเข้าถึงหรือแก้ไขสูตรอาหารหรือการให้คะแนนของผู้ใช้อื่นผ่านการปรับแต่ง API, การยืนยันตัวตนที่เสียหาย หรือการโจมตี SQL injection
+
+**ผลกระทบ:** สูงมาก — อาจเสี่ยงต่อความเป็นส่วนตัวของข้อมูลผู้ใช้และความสมบูรณ์ของแพลตฟอร์ม
+
+**กลยุทธ์การบรรเทา:**
+- ใช้การยืนยันตัวตนด้วย JWT บน endpoints ที่มีการป้องกันทั้งหมด
+- ใช้ parameterized queries เพื่อป้องกัน SQL injection
+- ตรวจสอบความเป็นเจ้าของของผู้ใช้ก่อนอนุญาตการดำเนินการแก้ไข/ลบ
+- ใช้ rate limiting เพื่อป้องกันการโจมตีแบบ brute force
+- ใช้ HTTPS ใน production เพื่อเข้ารหัสข้อมูลระหว่างการส่ง
+- ใช้ข้อจำกัด CORS เพื่อจำกัดการเข้าถึง API
+
+**แผนฉุกเฉิน:** การตรวจสอบความปลอดภัยเป็นประจำ, แก้ไขช่องโหว่ทันที, ระบบแจ้งเตือนผู้ใช้สำหรับการละเมิด
+
+---
+
+### ความเสี่ยงที่ 3: ความเสี่ยงในการดำเนินงาน — สแปมและเนื้อหาที่ไม่เหมาะสม
+**คำอธิบาย:** ผู้ใช้ที่เป็นอันตรายอาจส่งสแปมแพลตฟอร์มด้วยสูตรปลอม รูปภาพที่ไม่เหมาะสม หรือความคิดเห็นที่หยาบคายในการให้คะแนน ทำให้คุณภาพของชุมชนลดลง
+
+**ผลกระทบ:** ปานกลาง — อาจทำลายชื่อเสียงของแพลตฟอร์มและความไว้วางใจของผู้ใช้
+
+**กลยุทธ์การบรรเทา:**
+- ใช้ระบบการกลั่นกรองเนื้อหา (manual หรือ automated)
+- เพิ่มฟังก์ชันการรายงานสำหรับผู้ใช้เพื่อแจ้งเนื้อหาที่ไม่เหมาะสม
+- ใช้บทบาทผู้ดูแลระบบ (admin) สำหรับการจัดการเนื้อหา
+- ต้องการการยืนยันอีเมลสำหรับบัญชีใหม่
+- เพิ่ม rate limiting ในการสร้างสูตรและการให้คะแนน (เช่น สูงสุด 10 สูตรต่อวัน)
+- จัดเก็บ log กิจกรรมของผู้ใช้เพื่อการตรวจสอบ
+
+**แผนฉุกเฉิน:** แดชบอร์ดผู้ดูแลสำหรับการลบเนื้อหาอย่างรวดเร็ว, ระบบแบนผู้ใช้ชั่วคราว, การบังคับใช้แนวทางชุมชน
+
+---
+
+## สรุป
+
+แพลตฟอร์มแชร์สูตรอาหารนี้ตอบสนองความต้องการที่ชัดเจนในชุมชนการทำอาหารที่บ้านโดยมอบแพลตฟอร์มกลางที่ขับเคลื่อนโดยชุมชนสำหรับการแชร์และค้นพบสูตรอาหาร ข้อกำหนดของระบบเน้นที่ความต้องการหลักของผู้ใช้ (เรียกดู สร้าง ให้คะแนน) พร้อมรักษามาตรฐานสูงด้านประสิทธิภาพ ความปลอดภัย และความสะดวกในการใช้งาน ความเสี่ยงที่ระบุได้รับการวิเคราะห์พร้อมกลยุทธ์การบรรเทาที่ใช้ได้จริงเพื่อให้มั่นใจในความน่าเชื่อถือและความปลอดภัยของแพลตฟอร์ม
+
+**จำนวน User Stories ทั้งหมด:** 7
+**จำนวนข้อกำหนดที่ไม่ใช่ฟังก์ชัน:** 5
+**จำนวนความเสี่ยงที่ระบุ:** 3
+
+---
+
+**เวอร์ชันเอกสาร:** 1.0
+**วันที่:** 24 พฤศจิกายน 2568
+**สถานะ:** Final

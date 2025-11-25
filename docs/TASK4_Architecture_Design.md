@@ -1,21 +1,21 @@
-# Task 4 — System Architecture & UX/UI Design (20 points)
+# Task 4 — สถาปัตยกรรมระบบและการออกแบบ UX/UI (20 คะแนน)
 
-**Student:** Mr. Athichon Kaewla
-**Student ID:** 66315030406
-**Course:** 1305308 Platform Development
-**Project:** Recipe Sharing Platform with Ratings
-
----
-
-## Part A: System Architecture Diagram
-
-### Overview
-
-This architecture follows a **3-tier architecture pattern** consisting of Presentation Layer (Frontend), Application Layer (Backend), and Data Layer (Database). The system implements RESTful API communication between layers with JWT-based authentication.
+**นักศึกษา:** นาย อธิชน แก้วหล้า
+**รหัสนักศึกษา:** 66315030406
+**รายวิชา:** 1305308 Platform Development
+**โปรเจค:** Recipe Sharing Platform with Ratings
 
 ---
 
-### High-Level System Architecture
+## Part A: แผนภาพสถาปัตยกรรมระบบ
+
+### ภาพรวม
+
+สถาปัตยกรรมนี้เป็นไปตามแบบ **3-tier architecture pattern** ประกอบด้วย Presentation Layer (Frontend), Application Layer (Backend) และ Data Layer (Database) ระบบใช้การสื่อสารแบบ RESTful API ระหว่างชั้นต่างๆ พร้อมกับการยืนยันตัวตนแบบ JWT
+
+---
+
+### สถาปัตยกรรมระบบระดับสูง
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -177,9 +177,9 @@ This architecture follows a **3-tier architecture pattern** consisting of Presen
 
 ---
 
-### Component Interactions Flow
+### ขั้นตอนการทำงานระหว่าง Components
 
-#### **Flow 1: User Registration**
+#### **Flow 1: การลงทะเบียนผู้ใช้**
 
 ```
 ┌──────────┐     1. Submit Form      ┌──────────┐     2. Validate   ┌──────────┐
@@ -211,7 +211,7 @@ This architecture follows a **3-tier architecture pattern** consisting of Presen
 
 ---
 
-#### **Flow 2: Create Recipe (Protected)**
+#### **Flow 2: การสร้างสูตรอาหาร (Protected)**
 
 ```
 ┌──────────┐   1. Submit + JWT      ┌──────────┐   2. Verify JWT   ┌──────────┐
@@ -246,7 +246,7 @@ This architecture follows a **3-tier architecture pattern** consisting of Presen
 
 ---
 
-#### **Flow 3: View Recipe with Ratings (Public)**
+#### **Flow 3: การดูสูตรอาหารพร้อมคะแนน (Public)**
 
 ```
 ┌──────────┐   1. GET /recipes/:id   ┌──────────┐                   ┌──────────┐
@@ -270,7 +270,7 @@ This architecture follows a **3-tier architecture pattern** consisting of Presen
 
 ---
 
-### Security Features in Architecture
+### คุณสมบัติด้านความปลอดภัยในสถาปัตยกรรม
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -312,36 +312,36 @@ This architecture follows a **3-tier architecture pattern** consisting of Presen
 
 ---
 
-### Technology Stack Summary
+### สรุป Technology Stack
 
-| Layer | Technology | Purpose | Version |
-|-------|------------|---------|---------|
-| **Frontend** | React.js | UI library | 18+ |
-| | React Router | Client-side routing | 6 |
-| | Axios | HTTP client | Latest |
-| | Tailwind CSS | Styling | 3+ |
-| | Vite | Build tool | Latest |
+| ชั้น | เทคโนโลยี | จุดประสงค์ | เวอร์ชัน |
+|------|-----------|-----------|---------|
+| **Frontend** | React.js | ไลบรารีสำหรับสร้าง UI | 18+ |
+| | React Router | จัดการ routing ฝั่ง client | 6 |
+| | Axios | ตัวจัดการ HTTP client | Latest |
+| | Tailwind CSS | จัดการ styling | 3+ |
+| | Vite | เครื่องมือ build | Latest |
 | **Backend** | Node.js | JavaScript runtime | 18+ LTS |
 | | Express.js | Web framework | 4 |
 | | sqlite3 | Database driver | Latest |
-| **Database** | SQLite | SQL database | 3 |
-| **Security** | jsonwebtoken | JWT auth | 9+ |
-| | bcryptjs | Password hashing | 2+ |
-| | express-validator | Input validation | 7+ |
+| **Database** | SQLite | ฐานข้อมูล SQL | 3 |
+| **Security** | jsonwebtoken | การยืนยันตัวตนด้วย JWT | 9+ |
+| | bcryptjs | การแฮชรหัสผ่าน | 2+ |
+| | express-validator | การตรวจสอบความถูกต้องของ input | 7+ |
 | **Utilities** | cors | CORS middleware | Latest |
-| | dotenv | Environment vars | Latest |
+| | dotenv | จัดการ environment variables | Latest |
 
 ---
 
-## Part B: UX/UI Wireframes (2 Screens)
+## Part B: Wireframes สำหรับ UX/UI (2 หน้าจอ)
 
-### Instructions for Creating Wireframes
+### คำแนะนำในการสร้าง Wireframes
 
-Use **Figma** (https://figma.com) or **Excalidraw** (https://excalidraw.com) to create these wireframes and export as PNG.
+ใช้ **Figma** (https://figma.com) หรือ **Excalidraw** (https://excalidraw.com) เพื่อสร้าง wireframes เหล่านี้และ export เป็น PNG
 
 ---
 
-### Wireframe 1: Home Page (Recipe List)
+### Wireframe 1: หน้าแรก (รายการสูตรอาหาร)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -395,23 +395,23 @@ Use **Figma** (https://figma.com) or **Excalidraw** (https://excalidraw.com) to 
 │ └─────────────────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-MOBILE RESPONSIVE (320px - 768px):
-- Grid changes to 1-2 columns
-- Search bar full width
-- Touch-friendly buttons (min 44px height)
-- Hamburger menu for navigation
+รองรับ MOBILE (320px - 768px):
+- Grid เปลี่ยนเป็น 1-2 คอลัมน์
+- Search bar เต็มความกว้าง
+- ปุ่มที่เหมาะสำหรับการสัมผัส (ความสูงขั้นต่ำ 44px)
+- Hamburger menu สำหรับการนำทาง
 ```
 
-**Key UI Elements:**
-1. **Navbar:** Logo, navigation links, user status
-2. **Search Bar:** Full-text search with button
-3. **Recipe Grid:** Responsive 4-column grid (3, 2, 1 on smaller screens)
-4. **Recipe Card:** Image, title, rating stars, author, date, CTA button
-5. **Footer:** Copyright and links
+**องค์ประกอบ UI หลัก:**
+1. **Navbar:** โลโก้, ลิงก์นำทาง, สถานะผู้ใช้
+2. **Search Bar:** การค้นหาแบบเต็มข้อความพร้อมปุ่ม
+3. **Recipe Grid:** Grid แบบ responsive 4 คอลัมน์ (3, 2, 1 บนหน้าจอเล็ก)
+4. **Recipe Card:** รูปภาพ, ชื่อ, ดาวคะแนน, ผู้แต่ง, วันที่, ปุ่ม CTA
+5. **Footer:** ลิขสิทธิ์และลิงก์
 
 ---
 
-### Wireframe 2: Recipe Detail Page
+### Wireframe 2: หน้ารายละเอียดสูตรอาหาร
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -529,60 +529,60 @@ MOBILE RESPONSIVE (320px - 768px):
 │ └─────────────────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-RESPONSIVE DESIGN NOTES:
-- Single column layout on mobile
-- Image scales to full width
-- Rating stars become larger (touch-friendly)
-- Comments stack vertically
-- Edit/Delete buttons only visible to recipe owner
+หมายเหตุการออกแบบแบบ RESPONSIVE:
+- เลย์เอาต์แบบคอลัมน์เดียวบนมือถือ
+- รูปภาพปรับขนาดเต็มความกว้าง
+- ดาวคะแนนขนาดใหญ่ขึ้น (เหมาะสำหรับการสัมผัส)
+- ความคิดเห็นเรียงแนวตั้ง
+- ปุ่ม Edit/Delete แสดงเฉพาะเจ้าของสูตรอาหารเท่านั้น
 ```
 
-**Key UI Elements:**
-1. **Hero Image:** Full-width recipe photo
-2. **Recipe Header:** Title, rating, author info, action buttons
-3. **Ingredients Section:** Bulleted list in card/box
-4. **Instructions Section:** Numbered steps
-5. **Rating Form:** Interactive star selector + comment textarea
-6. **Reviews List:** User ratings with names, dates, scores, comments
-7. **Access Control:** Edit/Delete buttons only visible if logged-in user is the recipe owner
+**องค์ประกอบ UI หลัก:**
+1. **Hero Image:** รูปภาพสูตรอาหารเต็มความกว้าง
+2. **Recipe Header:** ชื่อ, คะแนน, ข้อมูลผู้แต่ง, ปุ่มการดำเนินการ
+3. **Ingredients Section:** รายการแบบ bullet points ในการ์ด/กล่อง
+4. **Instructions Section:** ขั้นตอนที่มีหมายเลข
+5. **Rating Form:** ตัวเลือกดาวแบบโต้ตอบ + textarea สำหรับความคิดเห็น
+6. **Reviews List:** คะแนนของผู้ใช้พร้อมชื่อ, วันที่, คะแนน, ความคิดเห็น
+7. **Access Control:** ปุ่ม Edit/Delete แสดงเฉพาะเมื่อผู้ใช้ที่ล็อกอินเป็นเจ้าของสูตรอาหาร
 
 ---
 
-### Design Guidelines
+### แนวทางการออกแบบ
 
-**Colors:**
-- Primary: Indigo (#4F46E5) - Buttons, links
-- Success: Green (#10B981) - Submit buttons
-- Warning: Yellow (#F59E0B) - Edit buttons
-- Danger: Red (#EF4444) - Delete buttons
-- Gray: (#6B7280) - Text, borders
+**สี:**
+- Primary: Indigo (#4F46E5) - ปุ่ม, ลิงก์
+- Success: Green (#10B981) - ปุ่ม Submit
+- Warning: Yellow (#F59E0B) - ปุ่ม Edit
+- Danger: Red (#EF4444) - ปุ่ม Delete
+- Gray: (#6B7280) - ข้อความ, ขอบ
 - Background: Light gray (#F3F4F6)
 
-**Typography:**
-- Headings: Inter, SF Pro, or system font
-- Body: 16px base, 1.5 line-height
-- Mobile: 14px base with larger touch targets
+**การจัดตัวอักษร:**
+- หัวข้อ: Inter, SF Pro หรือ system font
+- เนื้อหา: ขนาด 16px, line-height 1.5
+- มือถือ: ขนาด 14px พร้อมเป้าหมายการสัมผัสที่ใหญ่ขึ้น
 
-**Spacing:**
-- Base unit: 8px (Tailwind's spacing scale)
-- Cards: 16-24px padding
-- Section gaps: 32-48px
+**ระยะห่าง:**
+- หน่วยพื้นฐาน: 8px (Tailwind's spacing scale)
+- การ์ด: padding 16-24px
+- ช่องว่างระหว่างส่วน: 32-48px
 
-**Accessibility:**
-- WCAG AA contrast ratios
-- Focus indicators on interactive elements
-- Alt text on all images
+**การเข้าถึง (Accessibility):**
+- อัตราส่วน contrast ตาม WCAG AA
+- ตัวบอก focus บนองค์ประกอบที่โต้ตอบได้
+- ข้อความ alt บนรูปภาพทั้งหมด
 - Semantic HTML (nav, main, article, section)
 
 ---
 
-## Summary
+## สรุป
 
-This architecture implements a modern 3-tier web application with clear separation of concerns. The frontend React application communicates with the Express.js backend via RESTful APIs, with JWT-based authentication ensuring secure access to protected resources. The SQLite database provides reliable data persistence with proper constraints and indexes. The UI/UX design prioritizes usability with responsive layouts, intuitive navigation, and clear visual hierarchy. All components work together to create a secure, performant, and user-friendly Recipe Sharing Platform.
+สถาปัตยกรรมนี้ใช้แอปพลิเคชันเว็บแบบ 3-tier ที่ทันสมัยพร้อมการแยกความรับผิดชอบอย่างชัดเจน แอปพลิเคชัน React ฝั่ง frontend สื่อสารกับ backend ด้วย Express.js ผ่าน RESTful APIs โดยมีการยืนยันตัวตนแบบ JWT เพื่อให้มั่นใจว่าการเข้าถึงทรัพยากรที่ได้รับการป้องกันมีความปลอดภัย ฐานข้อมูล SQLite ให้การจัดเก็บข้อมูลที่เชื่อถือได้พร้อม constraints และ indexes ที่เหมาะสม การออกแบบ UI/UX ให้ความสำคัญกับความสามารถในการใช้งานด้วย responsive layouts, การนำทางที่ใช้งานง่าย และลำดับชั้นภาพที่ชัดเจน คอมโพเนนต์ทั้งหมดทำงานร่วมกันเพื่อสร้าง Recipe Sharing Platform ที่ปลอดภัย มีประสิทธิภาพ และเป็นมิตรต่อผู้ใช้
 
 ---
 
-**Document Version:** 1.0
-**Date:** November 24, 2025
-**Status:** Final
-**Tools Used:** ASCII Art, Figma (recommended for actual wireframes)
+**เวอร์ชันเอกสาร:** 1.0
+**วันที่:** November 24, 2025
+**สถานะ:** สมบูรณ์
+**เครื่องมือที่ใช้:** ASCII Art, Figma (แนะนำสำหรับ wireframes จริง)
